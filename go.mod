@@ -1,4 +1,4 @@
-module github.com/naiba/nbteam
+module github.com/naiba/poorsquad
 
 go 1.13
 
