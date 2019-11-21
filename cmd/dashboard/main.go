@@ -10,7 +10,7 @@ func main() {
 	r := gin.Default()
 	r.Static("/static", "resource/static")
 	r.LoadHTMLGlob("resource/template/**/*")
-	r.GET("/", func(c *gin.Context) {
+	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "user/login", gin.H{})
 	})
 	r.Run()

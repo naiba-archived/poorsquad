@@ -1,0 +1,15 @@
+.login-form {
+    height: 100%;
+}
+
+.login-form .column {
+    max-width: 450px;
+}
+
+.login-form .grid {
+    height: 100%;
+}
+
+.login-form .image {
+    margin-top: -100px;
+}
