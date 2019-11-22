@@ -22,7 +22,7 @@ type Oauth2 struct {
 }
 
 // ServeOauth2 ..
-func ServeOauth2(r *gin.Engine, cf *model.Config) {
+func ServeOauth2(r gin.IRoutes, cf *model.Config) {
 	oa := Oauth2{
 		oauth2Config: &oauth2.Config{
 			ClientID:     cf.GitHub.ClientID,
@@ -49,7 +49,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			Code:  http.StatusBadRequest,
 			Title: "登录失败",
 			Msg:   fmt.Sprintf("错误信息：%s", err),
-		})
+		}, true)
 		return
 	}
 	oc := oa.oauth2Config.Client(ctx, otk)
@@ -60,7 +60,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			Code:  http.StatusBadRequest,
 			Title: "登录失败",
 			Msg:   fmt.Sprintf("错误信息：%s", err),
-		})
+		}, true)
 		return
 	}
 	var u model.User
@@ -70,7 +70,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			Code:  http.StatusBadRequest,
 			Title: "登录失败",
 			Msg:   fmt.Sprintf("错误信息：%s", err),
-		})
+		}, true)
 		return
 	}
 	if err == gorm.ErrRecordNotFound {
@@ -81,7 +81,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 				Code:  http.StatusBadRequest,
 				Title: "系统错误",
 				Msg:   fmt.Sprintf("错误信息：%s", err),
-			})
+			}, true)
 			return
 		}
 		u = model.NewUserFromGitHub(gu)
@@ -90,7 +90,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 				Code:  http.StatusBadRequest,
 				Title: "系统错误",
 				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到用户ID"),
-			})
+			}, true)
 			return
 		}
 		if u.Login == "" {
@@ -98,7 +98,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 				Code:  http.StatusBadRequest,
 				Title: "系统错误",
 				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到用户登录名"),
-			})
+			}, true)
 			return
 		}
 		u.SuperAdmin = count == 0
@@ -110,10 +110,10 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			Code:  http.StatusBadRequest,
 			Title: "系统错误",
 			Msg:   fmt.Sprintf("用户保存失败：%s", err),
-		})
+		}, true)
 		return
 	}
-	c.SetCookie("i_love_github", u.Token, 60*60*24*14, "", "", false, false)
+	c.SetCookie(cfg.Site.CookieName, u.Token, 60*60*24*14, "", "", false, false)
 	c.Status(http.StatusOK)
 	c.Writer.WriteString("<script>window.location.href='/'</script>")
 }

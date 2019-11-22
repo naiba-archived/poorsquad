@@ -6,14 +6,14 @@
             <h2 class="ui teal image header">
                 <img src="/static/logo.png" class="image">
                 <div class="content">
-                    出现错误
+                    访问受限
                 </div>
             </h2>
             <div class="ui message">
                 <p>
                     {{.Msg}}
                 </p>
-                <a href="{{if .Link}}{{.Link}}{{else}}/{{end}}">返回</a>
+                <a href="{{.Link}}">{{.Btn}}</a>
             </div>
         </div>
     </div>

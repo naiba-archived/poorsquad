@@ -19,9 +19,9 @@ type User struct {
 	Hireable  bool   `json:"hireable,omitempty"`
 	Bio       string `json:"bio,omitempty"` // 个人简介
 
-	Token        string    `json:"token,omitempty"`         // 认证 Token
-	TokenExpired time.Time `json:"token_expired,omitempty"` // Token 过期时间
-	SuperAdmin   bool      `json:"super_admin,omitempty"`   // 超级管理员
+	Token        string    `gorm:"UNIQUE_INDEX" json:"token,omitempty"` // 认证 Token
+	TokenExpired time.Time `json:"token_expired,omitempty"`             // Token 过期时间
+	SuperAdmin   bool      `json:"super_admin,omitempty"`               // 超级管理员
 }
 
 // NewUserFromGitHub ..

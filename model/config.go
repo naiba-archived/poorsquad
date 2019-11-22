@@ -8,7 +8,8 @@ import (
 // Config ..
 type Config struct {
 	Site struct {
-		Brand string // 站点名称
+		Brand      string // 站点名称
+		CookieName string
 	}
 	GitHub struct {
 		ClientID     string
