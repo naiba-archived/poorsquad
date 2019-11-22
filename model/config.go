@@ -7,6 +7,9 @@ import (
 
 // Config ..
 type Config struct {
+	Site struct {
+		Brand string // 站点名称
+	}
 	GitHub struct {
 		ClientID     string
 		ClientSecret string

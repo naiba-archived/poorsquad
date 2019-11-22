@@ -1,0 +1,22 @@
+{{define "page/error"}}
+{{template "common/header" .}}
+<div class="login-form">
+    <div class="ui middle aligned center aligned grid">
+        <div class="column">
+            <h2 class="ui teal image header">
+                <img src="/static/logo.png" class="image">
+                <div class="content">
+                    出现错误
+                </div>
+            </h2>
+            <div class="ui message">
+                <p>
+                    {{.Msg}}
+                </p>
+                <a href="{{if .Link}}{{.Link}}{{else}}/{{end}}">返回</a>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "common/footer" .}}
+{{end}}

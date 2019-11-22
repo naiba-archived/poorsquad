@@ -1,6 +1,12 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/go-github/v28/github"
+	"github.com/naiba/com"
+)
 
 // User ...
 type User struct {
@@ -13,7 +19,28 @@ type User struct {
 	Hireable  bool   `json:"hireable,omitempty"`
 	Bio       string `json:"bio,omitempty"` // 个人简介
 
-	Token        string    // 认证 Token
-	TokenExpired time.Time // Token 过期时间
-	SuperAdmin   *bool     `json:"super_admin,omitempty"` // 超级管理员
+	Token        string    `json:"token,omitempty"`         // 认证 Token
+	TokenExpired time.Time `json:"token_expired,omitempty"` // Token 过期时间
+	SuperAdmin   bool      `json:"super_admin,omitempty"`   // 超级管理员
+}
+
+// NewUserFromGitHub ..
+func NewUserFromGitHub(gu *github.User) User {
+	var u User
+	u.ID = uint64(gu.GetID())
+	u.Login = gu.GetLogin()
+	u.AvatarURL = gu.GetAvatarURL()
+	u.Name = gu.GetName()
+	u.Blog = gu.GetBlog()
+	u.Blog = gu.GetBlog()
+	u.Email = gu.GetEmail()
+	u.Hireable = gu.GetHireable()
+	u.Bio = gu.GetBio()
+	return u
+}
+
+// IssueNewToken ...
+func (u *User) IssueNewToken() {
+	u.Token = com.MD5(fmt.Sprintf("%s%d%s", time.Now(), u.ID, u.Login))
+	u.TokenExpired = time.Now().AddDate(0, 0, 14)
 }

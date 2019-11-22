@@ -12,3 +12,4 @@
 *.out
 .DS_Store
 data/config.yaml
+data/github.db
