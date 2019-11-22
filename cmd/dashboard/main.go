@@ -1,17 +1,15 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/naiba/poorsquad/controller"
+	"github.com/naiba/poorsquad/model"
 )
 
 func main() {
-	r := gin.Default()
-	r.Static("/static", "resource/static")
-	r.LoadHTMLGlob("resource/template/**/*")
-	r.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "user/login", gin.H{})
-	})
-	r.Run()
+	cf, err := model.ReadInConfig("data/config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	go controller.RunWeb(cf)
+	select {}
 }
