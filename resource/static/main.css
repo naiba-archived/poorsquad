@@ -1,3 +1,9 @@
+@media only screen and (min-width: 1200px) {
+    .ui.container {
+        width: 77%;
+    }
+}
+
 .login-form {
     height: 100%;
 }
@@ -15,5 +21,5 @@
 }
 
 .nb-container {
-    margin-top: 50px;
+    margin-top: 60px;
 }
