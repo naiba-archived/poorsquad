@@ -20,14 +20,40 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 	r := gin.Default()
 	r.Static("/static", "resource/static")
 	r.LoadHTMLGlob("resource/template/**/*")
-	guestPage := r.Use(authorize(authorizeOption{
-		Guest:  true,
-		IsPage: true,
-	}))
-	guestPage.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "user/login", gin.H{})
-	})
-	ServeOauth2(guestPage, cf)
+
+	guestPage := r.Group("")
+	{
+		guestPage.Use(authorize(authorizeOption{
+			Guest:    true,
+			IsPage:   true,
+			Msg:      "您已登录",
+			Btn:      "返回首页",
+			Redirect: "/",
+		}))
+		ServeOauth2(guestPage, cf)
+		guestPage.GET("/login", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "user/login", commonEnvironment(gin.H{
+				"Title": "登录",
+			}))
+		})
+	}
+
+	memberPage := r.Group("")
+	{
+		memberPage.Use(authorize(authorizeOption{
+			Member:   true,
+			IsPage:   true,
+			Msg:      "此页面需要登录",
+			Btn:      "点此登录",
+			Redirect: "/login",
+		}))
+		memberPage.GET("/", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "user/login", commonEnvironment(gin.H{
+				"Title": "登录",
+			}))
+		})
+	}
+
 	r.Run()
 }
 
@@ -41,14 +67,12 @@ type errInfo struct {
 
 func showErrorPage(c *gin.Context, i errInfo, isPage bool) {
 	if isPage {
-		if i.Btn == "" {
-			i.Btn = "返回首页"
-		}
 		c.HTML(http.StatusOK, "page/error", commonEnvironment(gin.H{
 			"Code":  i.Code,
 			"Title": i.Title,
 			"Msg":   i.Msg,
 			"Link":  i.Link,
+			"Btn":   i.Btn,
 		}))
 	} else {
 		c.JSON(http.StatusOK, model.Response{
@@ -73,6 +97,7 @@ type authorizeOption struct {
 	Guest    bool
 	Member   bool
 	IsPage   bool
+	Msg      string
 	Redirect string
 	Btn      string
 }
@@ -80,13 +105,33 @@ type authorizeOption struct {
 func authorize(opt authorizeOption) func(*gin.Context) {
 	return func(c *gin.Context) {
 		token, err := c.Cookie(cfg.Site.CookieName)
-		if err != nil && opt.Member {
-			showErrorPage(c, errInfo{}, opt.IsPage)
-			return
+		var code uint64 = http.StatusForbidden
+		if opt.Guest {
+			code = http.StatusBadRequest
 		}
-		// TODO: authorize user
+		commonErr := errInfo{
+			Title: "访问受限",
+			Code:  code,
+			Msg:   opt.Msg,
+			Link:  opt.Redirect,
+			Btn:   opt.Btn,
+		}
 		if err == nil {
-			db.Where("token = ?", token)
+			var u model.User
+			err = db.Where("token = ?", token).First(&u).Error
+			if err == nil {
+				// 已登录且只能游客访问
+				if opt.Guest {
+					showErrorPage(c, commonErr, opt.IsPage)
+					return
+				}
+				c.Set(model.CtxKeyAuthorizedUser, &u)
+				return
+			}
+		}
+		// 未登录且需要登录
+		if err != nil && opt.Member {
+			showErrorPage(c, commonErr, opt.IsPage)
 		}
 	}
 }
