@@ -24,6 +24,17 @@ func home(c *gin.Context) {
 	}))
 }
 
+func account(c *gin.Context) {
+	compID := c.Param("id")
+	var accounts []model.Account
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	db.Table("accounts").Joins("INNER JOIN user_companies ON (accounts.company_id = user_companies.company_id AND user_companies.user_id = ? AND user_companies.company_id = ?)", u.ID, compID).Find(&accounts)
+	c.HTML(http.StatusOK, "page/account", commonEnvironment(c, gin.H{
+		"Title":    "GitHub 账号",
+		"Accounts": accounts,
+	}))
+}
+
 type logoutForm struct {
 	ID uint64
 }

@@ -51,6 +51,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Redirect: "/login",
 		}))
 		memberPage.GET("/", home)
+		memberPage.GET("/company/:id/account", account)
 	}
 
 	api := r.Group("api")
