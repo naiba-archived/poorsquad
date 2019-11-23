@@ -31,6 +31,10 @@ func NewUserFromGitHub(gu *github.User) User {
 	u.Login = gu.GetLogin()
 	u.AvatarURL = gu.GetAvatarURL()
 	u.Name = gu.GetName()
+	// 昵称为空的情况
+	if u.Name == "" {
+		u.Name = u.Login
+	}
 	u.Blog = gu.GetBlog()
 	u.Blog = gu.GetBlog()
 	u.Email = gu.GetEmail()

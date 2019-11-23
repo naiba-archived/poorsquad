@@ -2,9 +2,10 @@ package model
 
 // Company ...
 type Company struct {
-	Common
+	Common    `json:"common,omitempty"`
 	Brand     string `json:"brand,omitempty"`
 	AvatarURL string `json:"avatar_url,omitempty"`
 
-	UserID uint64 `gorm:"index" json:"user_id,omitempty"`
+	ProjectCount  uint64 `json:"project_count,omitempty"`
+	EmployeeCount uint64 `json:"employee_count,omitempty"`
 }

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"time"
 
@@ -19,6 +20,11 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 	cfg = cf
 	db = d
 	r := gin.Default()
+	r.SetFuncMap(template.FuncMap{
+		"tf": func(t time.Time) string {
+			return t.Format("2006年1月2号")
+		},
+	})
 	r.Static("/static", "resource/static")
 	r.LoadHTMLGlob("resource/template/**/*")
 
@@ -32,11 +38,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Redirect: "/",
 		}))
 		ServeOauth2(guestPage, cf)
-		guestPage.GET("/login", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "user/login", commonEnvironment(c, gin.H{
-				"Title": "登录",
-			}))
-		})
+		guestPage.GET("/login", login)
 	}
 
 	memberPage := r.Group("")
@@ -48,9 +50,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Btn:      "点此登录",
 			Redirect: "/login",
 		}))
-		memberPage.GET("/", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "page/home", commonEnvironment(c, gin.H{}))
-		})
+		memberPage.GET("/", home)
 	}
 
 	api := r.Group("api")
@@ -65,40 +65,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 				Redirect: "/login",
 			}))
 			ServeCompany(memberAPI)
-
-			type logoutForm struct {
-				ID uint64
-			}
-			memberAPI.POST("/logout", func(c *gin.Context) {
-				var lf logoutForm
-				if err := c.ShouldBindJSON(&lf); err != nil {
-					c.JSON(http.StatusOK, model.Response{
-						Code:    http.StatusBadRequest,
-						Message: fmt.Sprintf("请求错误：%s", err),
-					})
-					return
-				}
-				u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-				if u.ID != lf.ID {
-					c.JSON(http.StatusOK, model.Response{
-						Code:    http.StatusBadRequest,
-						Message: "用户ID不匹配",
-					})
-					return
-				}
-				u.Token = ""
-				u.TokenExpired = time.Now()
-				if err := db.Save(u).Error; err != nil {
-					c.JSON(http.StatusOK, model.Response{
-						Code:    http.StatusInternalServerError,
-						Message: fmt.Sprintf("数据库错误：%s", err),
-					})
-					return
-				}
-				c.JSON(http.StatusOK, model.Response{
-					Code: http.StatusOK,
-				})
-			})
+			memberAPI.POST("/logout", logout)
 		}
 	}
 
