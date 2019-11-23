@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -50,6 +51,55 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 		memberPage.GET("/", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "page/home", commonEnvironment(c, gin.H{}))
 		})
+	}
+
+	api := r.Group("api")
+	{
+		memberAPI := api.Group("")
+		{
+			memberAPI.Use(authorize(authorizeOption{
+				Member:   true,
+				IsPage:   false,
+				Msg:      "此页面需要登录",
+				Btn:      "点此登录",
+				Redirect: "/login",
+			}))
+			ServeCompany(memberAPI)
+
+			type logoutForm struct {
+				ID uint64
+			}
+			memberAPI.POST("/logout", func(c *gin.Context) {
+				var lf logoutForm
+				if err := c.ShouldBindJSON(&lf); err != nil {
+					c.JSON(http.StatusOK, model.Response{
+						Code:    http.StatusBadRequest,
+						Message: fmt.Sprintf("请求错误：%s", err),
+					})
+					return
+				}
+				u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+				if u.ID != lf.ID {
+					c.JSON(http.StatusOK, model.Response{
+						Code:    http.StatusBadRequest,
+						Message: "用户ID不匹配",
+					})
+					return
+				}
+				u.Token = ""
+				u.TokenExpired = time.Now()
+				if err := db.Save(u).Error; err != nil {
+					c.JSON(http.StatusOK, model.Response{
+						Code:    http.StatusInternalServerError,
+						Message: fmt.Sprintf("数据库错误：%s", err),
+					})
+					return
+				}
+				c.JSON(http.StatusOK, model.Response{
+					Code: http.StatusOK,
+				})
+			})
+		}
 	}
 
 	r.Run()

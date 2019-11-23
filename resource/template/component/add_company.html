@@ -1,0 +1,27 @@
+{{define "component/addCompany"}}
+<div class="ui tiny company modal transition hidden">
+    <div class="header">添加企业</div>
+    <div class="content">
+        <form id="companyForm" class="ui form">
+            <div class="field">
+                <label>公司名称</label>
+                <input type="text" name="brand" placeholder="Microsoft">
+            </div>
+            <div class="field">
+                <label>品牌标识</label>
+                <input type="text" name="avatar_url" placeholder="https://example.com/logo.png">
+            </div>
+        </form>
+        <div class="ui negative message hidden">
+            <i class="close icon"></i>
+            <div class="header">非常抱歉我们不能申请那个折扣 </div>
+            <p>请求已过期 </p>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">提交<i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}
