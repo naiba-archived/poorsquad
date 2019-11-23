@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/naiba/poorsquad/model"
@@ -58,8 +57,6 @@ func (cc *CompanyController) addOrEditCompany(c *gin.Context) {
 		})
 		return
 	}
-
-	time.Sleep(time.Second * 2)
 
 	c.JSON(http.StatusOK, model.Response{
 		Code:   http.StatusOK,

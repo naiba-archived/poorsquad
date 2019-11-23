@@ -1,27 +1,42 @@
-$('.message .close').on('click', function () {
-    $(this).closest('.message').transition('fade');
-});
+function showConfirm(title, content, callFn, extData) {
+    const modal = $('.mini.confirm.modal')
+    modal.children('.header').text(title)
+    modal.children('.content').text(content)
+    modal.modal({
+        closable: true,
+        onApprove: function () {
+            callFn(extData)
+            return true
+        }
+    }).modal('show')
+}
 
 function addCompany() {
     $('.tiny.company.modal').modal({
         closable: true,
         onApprove: function () {
             let success = false
-            if ($('.tiny.company.modal .positive.button').hasClass('loading')) {
-                console.log('加载中，不要重复点击')
+            const btn = $('.tiny.company.modal .positive.button')
+            const form = $('.tiny.company.modal form')
+            if (btn.hasClass('loading')) {
                 return success
             }
-            $('.tiny.company.modal .positive.button').toggleClass('loading')
+            form.children('.message').remove()
+            btn.toggleClass('loading')
             const data = $('#companyForm').serializeArray().reduce(function (obj, item) {
                 obj[item.name] = item.value;
                 return obj;
             }, {});
-            $.post('/api/company', JSON.stringify(data)).done(function () {
-                alert("second success");
-            }).fail(function () {
-                alert("error");
+            $.post('/api/company', JSON.stringify(data)).done(function (resp) {
+                if (resp.code == 200) {
+                    window.location.reload()
+                } else {
+                    form.append(`<div class="ui negative message"><div class="header">操作失败</div><p>` + resp.message + `</p></div>`)
+                }
+            }).fail(function (err) {
+                form.append(`<div class="ui negative message"><div class="header">网络错误</div><p>` + err.responseText + `</p></div>`)
             }).always(function () {
-                $('.tiny.company.modal .positive.button').toggleClass('loading')
+                btn.toggleClass('loading')
             });
             return success
         }

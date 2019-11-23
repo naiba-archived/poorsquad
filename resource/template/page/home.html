@@ -17,7 +17,7 @@
                         <button class="item" onclick="addCompany()">
                             <i class="add icon"></i>添加企业
                         </button>
-                        <button class="item" onclick="logout({{.User.ID}})">
+                        <button class="item" onclick="showConfirm('确认注销？','注销后您必须重新登录才能使用',logout,{{.User.ID}})">
                             <i class="logout icon"></i>注销登录
                         </button>
                     </div>
@@ -27,7 +27,11 @@
     </div>
 </div>
 <div class="nb-container">
-    {{.User}}
+    <div class="ui container">
+        {{.User}}
+    </div>
 </div>
+{{template "component/addCompany" .}}
+{{template "component/confirm" .}}
 {{template "common/footer" .}}
 {{end}}
