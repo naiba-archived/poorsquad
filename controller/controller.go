@@ -32,7 +32,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 		}))
 		ServeOauth2(guestPage, cf)
 		guestPage.GET("/login", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "user/login", commonEnvironment(gin.H{
+			c.HTML(http.StatusOK, "user/login", commonEnvironment(c, gin.H{
 				"Title": "登录",
 			}))
 		})
@@ -48,9 +48,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Redirect: "/login",
 		}))
 		memberPage.GET("/", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "user/login", commonEnvironment(gin.H{
-				"Title": "登录",
-			}))
+			c.HTML(http.StatusOK, "page/home", commonEnvironment(c, gin.H{}))
 		})
 	}
 
@@ -67,7 +65,7 @@ type errInfo struct {
 
 func showErrorPage(c *gin.Context, i errInfo, isPage bool) {
 	if isPage {
-		c.HTML(http.StatusOK, "page/error", commonEnvironment(gin.H{
+		c.HTML(http.StatusOK, "page/error", commonEnvironment(c, gin.H{
 			"Code":  i.Code,
 			"Title": i.Title,
 			"Msg":   i.Msg,
@@ -83,12 +81,16 @@ func showErrorPage(c *gin.Context, i errInfo, isPage bool) {
 	c.Abort()
 }
 
-func commonEnvironment(data map[string]interface{}) gin.H {
+func commonEnvironment(c *gin.Context, data map[string]interface{}) gin.H {
 	// 站点标题
-	if data["Title"] == "" {
+	if t, has := data["Title"]; !has {
 		data["Title"] = cfg.Site.Brand
 	} else {
-		data["Title"] = fmt.Sprintf("%s - %s", data["Title"], cfg.Site.Brand)
+		data["Title"] = fmt.Sprintf("%s - %s", t, cfg.Site.Brand)
+	}
+	u, ok := c.Get(model.CtxKeyAuthorizedUser)
+	if ok {
+		data["User"] = u
 	}
 	return data
 }

@@ -1,0 +1,23 @@
+{{define "page/home"}}
+{{template "common/header" .}}
+<div class="ui large top fixed text menu nb-menu">
+    <div class="ui container">
+        <div class="item">
+            <img src="/static/logo.png">
+        </div>
+        <a class="active item">首页</a>
+        <div class="right menu">
+            <div class="item">
+                <a class="ui button">Log in</a>
+            </div>
+            <div class="item">
+                <a class="ui primary button">Sign Up</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="nb-container">
+    {{.User}}
+</div>
+{{template "common/footer" .}}
+{{end}}
