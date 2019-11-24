@@ -32,14 +32,14 @@
                         <div class="column">
                             <h2>我的企业</h2>
                         </div>
-                        <div class="right aligned column">
-                            <div class="ui vertical animated button" onclick="addCompany()">
-                                <div class="hidden content">创建</div>
-                                <div class="visible content">
+                        <p class="right aligned column">
+                            <span class="ui vertical animated button" onclick="addCompany()">
+                                <span class="hidden content">创建</span>
+                                <span class="visible content">
                                     <i class="add icon"></i>
-                                </div>
-                            </div>
-                        </div>
+                                </span>
+                            </span>
+                        </p>
                     </div>
                     <table class="ui very basic celled table">
                         <thead>
@@ -48,8 +48,9 @@
                                 <th>企业</th>
                                 <th>超管</th>
                                 <th>管理员</th>
-                                <th>雇员</th>
+                                <th>小组</th>
                                 <th>项目</th>
+                                <th>雇员</th>
                                 <th>管理操作</th>
                             </tr>
                         </thead>
@@ -69,15 +70,18 @@
                                     胡歌、霍建华、马云、马化腾
                                 </td>
                                 <td>
-                                    {{.EmployeeCount}}人
+                                    {{.TeamCount}}组
                                 </td>
                                 <td>
                                     {{.ProjectCount}}个
                                 </td>
                                 <td>
-                                    <div class="ui four buttons">
-                                        <a class="primary ui mini button" href="/company/{{.ID}}/account"><i
-                                                class="icon github"></i></a>
+                                    {{.EmployeeCount}}位
+                                </td>
+                                <td>
+                                    <div class="ui icon buttons">
+                                        <a class="primary ui mini button" href="/company/{{.ID}}"><i
+                                                class="icon building outline"></i></a>
                                         <button class="ui mini button"><i class="icon edit"></i></button>
                                         <button class="red ui mini button"><i class="icon delete"></i></button>
                                         <button class="ui warning mini icon button"><i

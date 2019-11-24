@@ -16,10 +16,35 @@
     height: 100%;
 }
 
-.login-form .image {
-    margin-top: -100px;
-}
-
 .nb-container {
     margin-top: 75px;
+}
+
+.avatar-list img {
+    width: 2.6rem !important;
+    height: 2.6rem !important;
+}
+
+.card-list {
+    width: 100% !important;
+    padding-right: unset !important;
+}
+
+.card-list .card {
+    width: calc(33.33333333% - 1.1em) !important;
+    margin-right: unset !important;
+    margin-top: unset !important;
+
+}
+
+.card-list .card:nth-child(1) {
+    margin-top: 0.875em !important;
+}
+
+.card-list .card:nth-child(2) {
+    margin-top: 0.875em !important;
+}
+
+.card-list .card:nth-child(3) {
+    margin-top: 0.875em !important;
 }

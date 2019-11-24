@@ -1,0 +1,19 @@
+{{define "component/addTeam"}}
+<div class="ui tiny team modal transition hidden">
+    <div class="header">创建小组</div>
+    <div class="content">
+        <form id="teamForm" class="ui form">
+            <input type="hidden" name="company_id" value="{{.CompanyID}}">
+            <div class="field">
+                <label>名称</label>
+                <input type="text" name="name" placeholder="研发组">
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">绑定<i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}
