@@ -45,6 +45,6 @@ func NewUserFromGitHub(gu *github.User) User {
 
 // IssueNewToken ...
 func (u *User) IssueNewToken() {
-	u.Token = com.MD5(fmt.Sprintf("%s%d%s", time.Now(), u.ID, u.Login))
+	u.Token = com.MD5(fmt.Sprintf("%d%d%s", time.Now().UnixNano(), u.ID, u.Login))
 	u.TokenExpired = time.Now().AddDate(0, 0, 14)
 }

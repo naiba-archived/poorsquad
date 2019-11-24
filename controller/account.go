@@ -6,10 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/go-github/v28/github"
-	"golang.org/x/oauth2"
 
 	"github.com/naiba/poorsquad/model"
+	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
 // AccountController ..
@@ -56,14 +55,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{
-			AccessToken: af.Token,
-		},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
+	client := GitHubService.NewAPIClient(ctx, af.Token)
 	gu, _, err := client.Users.Get(ctx, "")
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
@@ -82,6 +74,8 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 		})
 		return
 	}
+
+	go GitHubService.Sync(db, &a, a.Token)
 
 	c.JSON(http.StatusOK, model.Response{
 		Code:   http.StatusOK,

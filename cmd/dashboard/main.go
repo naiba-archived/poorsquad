@@ -6,6 +6,7 @@ import (
 
 	"github.com/naiba/poorsquad/controller"
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/github"
 )
 
 func main() {
@@ -21,7 +22,8 @@ func main() {
 		db = db.Debug()
 	}
 	db.AutoMigrate(model.User{}, model.Company{}, model.UserCompany{},
-		model.Account{}, model.Team{})
+		model.Account{}, model.Team{}, model.Repository{}, model.UserRepository{})
 	go controller.RunWeb(cf, db)
+	go github.SyncAll(db)
 	select {}
 }

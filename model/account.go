@@ -1,6 +1,10 @@
 package model
 
-import "github.com/google/go-github/v28/github"
+import (
+	"time"
+
+	"github.com/google/go-github/v28/github"
+)
 
 const (
 	_ = iota
@@ -21,6 +25,7 @@ type Account struct {
 	Message string `json:"message,omitempty"`
 	Token   string `json:"token,omitempty"`
 
+	SyncedAt  time.Time
 	CompanyID uint64 `json:"company_id,omitempty"`
 }
 

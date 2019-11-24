@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/gin-gonic/gin"
-	githubApi "github.com/google/go-github/v28/github"
+	GitHubAPI "github.com/google/go-github/v28/github"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
@@ -53,7 +53,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 		return
 	}
 	oc := oa.oauth2Config.Client(ctx, otk)
-	client := githubApi.NewClient(oc)
+	client := GitHubAPI.NewClient(oc)
 	gu, _, err := client.Users.Get(ctx, "")
 	if err != nil {
 		showErrorPage(c, errInfo{
