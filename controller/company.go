@@ -15,7 +15,7 @@ type CompanyController struct {
 // ServeCompany ..
 func ServeCompany(r gin.IRoutes) {
 	cc := CompanyController{}
-	r.POST("/company", cc.addOrEditCompany)
+	r.POST("/company", cc.addOrEdit)
 }
 
 type companyForm struct {
@@ -24,7 +24,7 @@ type companyForm struct {
 	AvatarURL string `binding:"required" json:"avatar_url,omitempty"`
 }
 
-func (cc *CompanyController) addOrEditCompany(c *gin.Context) {
+func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	var cf companyForm
 	if err := c.ShouldBindJSON(&cf); err != nil {
 		c.JSON(http.StatusOK, model.Response{

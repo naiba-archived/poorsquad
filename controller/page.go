@@ -24,13 +24,30 @@ func home(c *gin.Context) {
 	}))
 }
 
-func account(c *gin.Context) {
+func company(c *gin.Context) {
 	compID := c.Param("id")
-	var accounts []model.Account
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-	db.Table("accounts").Joins("INNER JOIN user_companies ON (accounts.company_id = user_companies.company_id AND user_companies.company_id = ? AND user_companies.user_id = ?)", compID, u.ID).Find(&accounts)
-	c.HTML(http.StatusOK, "page/account", commonEnvironment(c, gin.H{
-		"Title":     "GitHub 账户",
+	var comp model.Company
+	if err := db.Table("companies").Joins("INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ? AND user_companies.company_id = ?)", u.ID, compID).First(&comp).Error; err != nil {
+		showErrorPage(c, errInfo{
+			Code:  http.StatusForbidden,
+			Title: "访问受限",
+			Msg:   fmt.Sprintf("无权访问：%s", err),
+			Link:  "/",
+			Btn:   "返回首页",
+		}, true)
+		return
+	}
+
+	var accounts []model.Account
+	db.Where("company_id = ? ", compID).Find(&accounts)
+	var teams []model.Team
+	db.Where("company_id = ? ", compID).Find(&teams)
+
+	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{
+		"Title":     comp.Brand + "- 企业",
+		"Company":   comp,
+		"Teams":     teams,
 		"Accounts":  accounts,
 		"CompanyID": compID,
 	}))

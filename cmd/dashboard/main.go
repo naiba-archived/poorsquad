@@ -17,8 +17,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db = db.Debug()
-	db.AutoMigrate(model.User{}, model.Company{}, model.UserCompany{}, model.Account{})
+	if cf.Debug {
+		db = db.Debug()
+	}
+	db.AutoMigrate(model.User{}, model.Company{}, model.UserCompany{},
+		model.Account{}, model.Team{})
 	go controller.RunWeb(cf, db)
 	select {}
 }

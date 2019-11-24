@@ -4,6 +4,8 @@ import "time"
 
 const (
 	_ = iota
+	// UCPOutsideMember 企业外部雇员
+	UCPOutsideMember
 	// UCPMember 企业成员
 	UCPMember
 	// UCPManager 企业管理员
@@ -17,5 +19,5 @@ type UserCompany struct {
 	UserID     uint64 `gorm:"primary_key;auto_increment:false"`
 	CompanyID  uint64 `gorm:"primary_key;auto_increment:false"`
 	Permission uint64
-	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }

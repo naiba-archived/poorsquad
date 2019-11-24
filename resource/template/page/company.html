@@ -1,0 +1,141 @@
+{{define "page/company"}}
+{{template "common/header" .}}
+{{template "component/menu" .}}
+<div class="nb-container">
+    <div class="ui container">
+        <div class="ui grid">
+            <div class="four wide column">
+                <div class="ui card">
+                    <div class="image">
+                        <img src="{{.Company.AvatarURL}}">
+                    </div>
+                    <div class="content">
+                        <a class="header">{{.Company.Brand}}</a>
+                        <div class="meta">
+                            <span class="date">{{.Company.CreatedAt|tf}}加入</span>
+                        </div>
+                        <div class="description">
+                            <p>共有小组：{{.Company.TeamCount}} 组</p>
+                            <p>共有项目：{{.Company.ProjectCount}} 个</p>
+                            <p>共有雇员：{{.Company.EmployeeCount}} 位</p>
+                        </div>
+                    </div>
+                    <div class="extra content">
+                        <p><i class="red heart icon"></i> Happy Workday </p>
+                    </div>
+                </div>
+            </div>
+            <div class="twelve wide column">
+                <div class="ui grid">
+                    <div class="two columns row">
+                        <div class="column">
+                            <h2>小组列表</h2>
+                        </div>
+                        <div class="right aligned column">
+                            <div class="ui vertical animated button" onclick="addTeam()">
+                                <div class="hidden content">创建</div>
+                                <div class="visible content">
+                                    <i class="add icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui card-list three cards">
+                        {{range .Teams}}
+                        <div class="card">
+                            <div class="content">
+                                <div class="header">
+                                    {{.Name}}
+                                    <div class="right floated ui mini icon buttons">
+                                        <button class="ui button"><i class="icon edit"></i></button>
+                                        <button class="red ui button"><i class="icon delete"></i></button>
+                                    </div>
+                                </div>
+                                <div class="meta">创建于 {{.CreatedAt|tf}}</div>
+                                <div class="description avatar-list">
+                                    <div class="ui horizontal divider">内部成员</div>
+                                    <div class="ui inline mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button"
+                                            onclick="alert('bingo')">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </div>
+                                    <div class="ui inline mini circular rotate image">
+                                        <button class="circular ui primary icon button" onclick="alert('bingo')">
+                                            <i class="icon add"></i>
+                                        </button>
+                                    </div>
+                                    <div class="ui horizontal divider">外部成员</div>
+                                    <div class="ui inline mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button"
+                                            onclick="alert('bingo')">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="ui grid">
+                    <div class="two columns row">
+                        <div class="column">
+                            <h2>账号绑定</h2>
+                        </div>
+                        <div class="right aligned column">
+                            <div class="ui vertical animated button" onclick="addAccount()">
+                                <div class="hidden content">绑定</div>
+                                <div class="visible content">
+                                    <i class="plug icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="ui very basic celled table">
+                        <thead>
+                            <tr>
+                                <th>头像</th>
+                                <th>昵称</th>
+                                <th>绑定时间</th>
+                                <th>状态</th>
+                                <th>管理操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Accounts}}
+                            <tr>
+                                <td>
+                                    <img src="{{.AvatarURL}}" class="ui mini rounded image">
+                                </td>
+                                <td>
+                                    {{.Name}}
+                                </td>
+                                <td>
+                                    {{.CreatedAt|tf}}
+                                </td>
+                                <td>
+                                    {{.Status}}
+                                </td>
+                                <td>
+                                    <div class="ui icon buttons">
+                                        <button class="ui mini button"><i class="icon sync"></i></button>
+                                        <button class="red ui mini button"><i class="icon delete"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "component/addTeam" .}}
+{{template "component/addAccount" .}}
+{{template "component/confirm" .}}
+{{template "common/footer" .}}
+{{end}}
