@@ -1,0 +1,19 @@
+{{define "component/addAccount"}}
+<div class="ui tiny account modal transition hidden">
+    <div class="header">绑定 GitHub 账户</div>
+    <div class="content">
+        <form id="accountForm" class="ui form">
+            <input type="hidden" name="company_id" value="{{.CompanyID}}">
+            <div class="field">
+                <label>Token</label>
+                <input type="text" name="token" placeholder="GitHub Personal Token">
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">绑定<i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}

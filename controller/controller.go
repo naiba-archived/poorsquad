@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 	cfg = cf
 	db = d
 	r := gin.Default()
+	r.Use(bindPath)
 	r.SetFuncMap(template.FuncMap{
 		"tf": func(t time.Time) string {
 			return t.Format("2006年1月2号")
@@ -66,11 +68,20 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 				Redirect: "/login",
 			}))
 			ServeCompany(memberAPI)
+			ServeAccount(memberAPI)
 			memberAPI.POST("/logout", logout)
 		}
 	}
 
 	r.Run()
+}
+
+func bindPath(c *gin.Context) {
+	url := c.Request.URL.String()
+	for _, p := range c.Params {
+		url = strings.Replace(url, p.Value, ":"+p.Key, 1)
+	}
+	c.Set("MatchedPath", url)
 }
 
 type errInfo struct {
@@ -100,6 +111,7 @@ func showErrorPage(c *gin.Context, i errInfo, isPage bool) {
 }
 
 func commonEnvironment(c *gin.Context, data map[string]interface{}) gin.H {
+	data["MatchedPath"] = c.MustGet("MatchedPath")
 	// 站点标题
 	if t, has := data["Title"]; !has {
 		data["Title"] = cfg.Site.Brand

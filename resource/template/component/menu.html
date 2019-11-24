@@ -4,7 +4,7 @@
         <div class="item">
             <img src="/static/logo.png">
         </div>
-        <a class="item" href="/">首页</a>
+        <a class="item{{if eq .MatchedPath "/"}} active{{end}}" href="/">首页</a>
         <div class="right menu">
             <div class="item">
                 <div class="ui simple dropdown">

@@ -3,61 +3,45 @@
 {{template "component/menu" .}}
 <div class="nb-container">
     <div class="ui container">
-        {{.Accounts}}
         <div class="ui grid">
             <div class="two columns row">
                 <div class="column">
-                    <h2>我的企业</h2>
+                    <h2>GitHub 账户</h2>
                 </div>
                 <div class="right aligned column">
-                    <div class="ui vertical animated button" onclick="addCompany()">
-                        <div class="hidden content">创建</div>
+                    <div class="ui vertical animated button" onclick="addAccount()">
+                        <div class="hidden content">绑定</div>
                         <div class="visible content">
-                            <i class="add icon"></i>
+                            <i class="plug icon"></i>
                         </div>
                     </div>
                 </div>
             </div>
-            <table class="ui very basic collapsing celled table">
+            <table class="ui very basic celled table">
                 <thead>
                     <tr>
                         <th>标志</th>
-                        <th>企业</th>
-                        <th>超管</th>
-                        <th>管理员</th>
-                        <th>雇员</th>
-                        <th>项目</th>
+                        <th>名称</th>
+                        <th>状态</th>
                         <th>管理操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{range .Companies}}
+                    {{range .Accounts}}
                     <tr>
                         <td>
                             <img src="{{.AvatarURL}}" class="ui mini rounded image">
                         </td>
                         <td>
-                            {{.Brand}}
+                            {{.Name}}
                         </td>
                         <td>
-                            奶爸
-                        </td>
-                        <td>
-                            胡歌、霍建华、马云、马化腾
-                        </td>
-                        <td>
-                            {{.EmployeeCount}}人
-                        </td>
-                        <td>
-                            {{.ProjectCount}}个
+                            {{.Status}}
                         </td>
                         <td>
                             <div class="ui four buttons">
-                                <a class="primary ui mini button" href="/company/{{.ID}}/account"><i
-                                        class="icon github"></i></a>
-                                <button class="ui mini button"><i class="icon edit"></i></button>
+                                <button class="primary ui mini button"><i class="sync icon"></i></button>
                                 <button class="red ui mini button"><i class="icon delete"></i></button>
-                                <button class="ui warning mini icon button"><i class="icon sign-out"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -67,7 +51,7 @@
         </div>
     </div>
 </div>
-{{template "component/addCompany" .}}
+{{template "component/addAccount" .}}
 {{template "component/confirm" .}}
 {{template "common/footer" .}}
 {{end}}

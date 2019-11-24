@@ -2,15 +2,24 @@ package model
 
 import "github.com/google/go-github/v28/github"
 
+const (
+	_ = iota
+	// ASOK ..
+	ASOK
+	// ASFail ..
+	ASFail
+)
+
 // Account ..
 type Account struct {
-	Common
+	Common    `json:"common,omitempty"`
 	Login     string `json:"login,omitempty"`
 	Name      string `json:"name,omitempty"` // 昵称
 	AvatarURL string `json:"avatar_url,omitempty"`
 
-	Status uint   `json:"status,omitempty"`
-	Token  string `json:"token,omitempty"`
+	Status  uint   `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+	Token   string `json:"token,omitempty"`
 
 	CompanyID uint64 `json:"company_id,omitempty"`
 }
@@ -22,6 +31,7 @@ func NewAccountFromGitHub(gu *github.User) Account {
 	u.Login = gu.GetLogin()
 	u.AvatarURL = gu.GetAvatarURL()
 	u.Name = gu.GetName()
+	u.Status = ASOK
 	// 昵称为空的情况
 	if u.Name == "" {
 		u.Name = u.Login
