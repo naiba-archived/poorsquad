@@ -26,6 +26,12 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 		"tf": func(t time.Time) string {
 			return t.Format("2006年1月2号")
 		},
+		"fs": func() string {
+			if !cfg.Debug {
+				return ""
+			}
+			return fmt.Sprintf("%d", time.Now().UnixNano())
+		},
 	})
 	r.Static("/static", "resource/static")
 	r.LoadHTMLGlob("resource/template/**/*")
@@ -53,7 +59,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Redirect: "/login",
 		}))
 		memberPage.GET("/", home)
-		memberPage.GET("/company/:id/account", account)
+		memberPage.GET("/company/:id", company)
 	}
 
 	api := r.Group("api")
@@ -69,6 +75,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			}))
 			ServeCompany(memberAPI)
 			ServeAccount(memberAPI)
+			ServeTeam(memberAPI)
 			memberAPI.POST("/logout", logout)
 		}
 	}
