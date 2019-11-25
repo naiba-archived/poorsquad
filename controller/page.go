@@ -41,15 +41,22 @@ func company(c *gin.Context) {
 
 	var accounts []model.Account
 	db.Where("company_id = ? ", compID).Find(&accounts)
+	var accountID []uint64
+	for i := 0; i < len(accounts); i++ {
+		accountID = append(accountID, accounts[i].ID)
+	}
+	var repos []model.Repository
+	db.Where("account_id IN (?) ", accountID).Find(&repos)
 	var teams []model.Team
 	db.Where("company_id = ? ", compID).Find(&teams)
 
 	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{
-		"Title":     comp.Brand + "- 企业",
-		"Company":   comp,
-		"Teams":     teams,
-		"Accounts":  accounts,
-		"CompanyID": compID,
+		"Title":        comp.Brand + "- 企业",
+		"Company":      comp,
+		"Teams":        teams,
+		"Repositories": repos,
+		"Accounts":     accounts,
+		"CompanyID":    compID,
 	}))
 }
 

@@ -48,3 +48,9 @@
 .card-list .card:nth-child(3) {
     margin-top: 0.875em !important;
 }
+
+.grid-list>.grid>.row {
+    border-bottom: solid gainsboro 2px;
+    padding-bottom: .6em;
+    margin-bottom: .6em;
+}

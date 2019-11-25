@@ -25,65 +25,11 @@
                     </div>
                 </div>
             </div>
-            <div class="twelve wide column">
+            <div class="twelve wide column grid-list">
                 <div class="ui grid">
                     <div class="two columns row">
                         <div class="column">
-                            <h2>小组列表</h2>
-                        </div>
-                        <div class="right aligned column">
-                            <div class="ui vertical animated button" onclick="addTeam()">
-                                <div class="hidden content">创建</div>
-                                <div class="visible content">
-                                    <i class="add icon"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ui card-list three cards">
-                        {{range .Teams}}
-                        <div class="card">
-                            <div class="content">
-                                <div class="header">
-                                    {{.Name}}
-                                    <div class="right floated ui mini icon buttons">
-                                        <button class="ui button"><i class="icon edit"></i></button>
-                                        <button class="red ui button"><i class="icon delete"></i></button>
-                                    </div>
-                                </div>
-                                <div class="meta">创建于 {{.CreatedAt|tf}}</div>
-                                <div class="description avatar-list">
-                                    <div class="ui horizontal divider">内部成员</div>
-                                    <div class="ui inline mini fade reveal circular rotate image">
-                                        <img class="visible content" src="{{$.User.AvatarURL}}">
-                                        <button class="hidden content circular ui red icon button"
-                                            onclick="alert('bingo')">
-                                            <i class="icon delete"></i>
-                                        </button>
-                                    </div>
-                                    <div class="ui inline mini circular rotate image">
-                                        <button class="circular ui primary icon button" onclick="alert('bingo')">
-                                            <i class="icon add"></i>
-                                        </button>
-                                    </div>
-                                    <div class="ui horizontal divider">外部成员</div>
-                                    <div class="ui inline mini fade reveal circular rotate image">
-                                        <img class="visible content" src="{{$.User.AvatarURL}}">
-                                        <button class="hidden content circular ui red icon button"
-                                            onclick="alert('bingo')">
-                                            <i class="icon delete"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {{end}}
-                    </div>
-                </div>
-                <div class="ui grid">
-                    <div class="two columns row">
-                        <div class="column">
-                            <h2>账号绑定</h2>
+                            <h2>账号列表</h2>
                         </div>
                         <div class="right aligned column">
                             <div class="ui vertical animated button" onclick="addAccount()">
@@ -118,6 +64,109 @@
                                 </td>
                                 <td>
                                     {{.Status}}
+                                </td>
+                                <td>
+                                    <div class="ui icon buttons">
+                                        <button class="ui mini button"><i class="icon sync"></i></button>
+                                        <button class="red ui mini button"><i class="icon delete"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ui grid">
+                    <div class="two columns row">
+                        <div class="column">
+                            <h2>小组列表</h2>
+                        </div>
+                        <div class="right aligned column">
+                            <div class="ui vertical animated button" onclick="addTeam()">
+                                <div class="hidden content">创建</div>
+                                <div class="visible content">
+                                    <i class="add icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui card-list three cards">
+                        {{range .Teams}}
+                        <div class="card">
+                            <div class="content">
+                                <div class="header">
+                                    {{.Name}}
+                                    <div class="right floated ui mini icon buttons">
+                                        <button class="ui primary button"><i class="icon cubes"></i></button>
+                                        <button class="ui button"><i class="icon edit"></i></button>
+                                        <button class="ui red button"><i class="icon delete"></i></button>
+                                    </div>
+                                </div>
+                                <div class="meta">创建于 {{.CreatedAt|tf}}</div>
+                                <div class="description avatar-list">
+                                    <p class="ui inline mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button"
+                                            onclick="alert('bingo')">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </p>
+                                    <p class="ui inline mini circular rotate image">
+                                        <button class="circular ui primary icon button" onclick="alert('bingo')">
+                                            <i class="icon add"></i>
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="ui grid">
+                    <div class="two columns row">
+                        <div class="column">
+                            <h2>仓库列表</h2>
+                        </div>
+                        <div class="right aligned column">
+                            <div class="ui vertical animated button" onclick="addAccount()">
+                                <div class="hidden content">绑定</div>
+                                <div class="visible content">
+                                    <i class="plug icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="ui very basic celled table">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>外部雇员</th>
+                                <th>同步时间</th>
+                                <th>管理操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Repositories}}
+                            <tr>
+                                <td {{if .Description}}data-tooltip="{{.Description}}" {{end}}>
+                                    {{.Name}}
+                                </td>
+                                <td class="avatar-list">
+                                    <p class="ui mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </p>
+                                    <p class="ui mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </p>
+                                </td>
+                                <td>
+                                    {{.SyncedAt|tf}}
                                 </td>
                                 <td>
                                     <div class="ui icon buttons">
