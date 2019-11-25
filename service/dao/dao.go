@@ -36,6 +36,7 @@ func GetUserByID(id uint64) (user model.User, err error) {
 		userI, err = avalanche.Do(key, func() (interface{}, error) {
 			var u model.User
 			e := DB.Where("id = ?", id).First(&u).Error
+			Cache.SetDefault(key, u)
 			return u, e
 		})
 	}
