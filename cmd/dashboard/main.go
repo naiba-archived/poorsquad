@@ -1,11 +1,15 @@
 package main
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/patrickmn/go-cache"
 
 	"github.com/naiba/poorsquad/controller"
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 	"github.com/naiba/poorsquad/service/github"
 )
 
@@ -22,8 +26,12 @@ func main() {
 		db = db.Debug()
 	}
 	db.AutoMigrate(model.User{}, model.Company{}, model.UserCompany{},
-		model.Account{}, model.Team{}, model.Repository{}, model.UserRepository{})
-	go controller.RunWeb(cf, db)
+		model.Account{}, model.Team{}, model.Repository{}, model.UserRepository{},
+		model.UserTeam{}, model.TeamRepository{})
+
+	dao.Init(db, cache.New(5*time.Minute, 10*time.Minute), cf)
+
+	go controller.RunWeb()
 	go github.SyncAll(db)
 	select {}
 }

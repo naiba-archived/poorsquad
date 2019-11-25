@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 )
 
 // TeamController ..
@@ -36,7 +37,7 @@ func (tc *TeamController) addOrEdit(c *gin.Context) {
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 
 	var uc model.UserCompany
-	if err := db.Where("user_id = ? AND company_id = ?", u.ID, tf.CompanyID).First(&uc).Error; err != nil {
+	if err := dao.DB.Where("user_id = ? AND company_id = ?", u.ID, tf.CompanyID).First(&uc).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("您不是该企业的雇员：%s", err),
@@ -55,7 +56,7 @@ func (tc *TeamController) addOrEdit(c *gin.Context) {
 	var t model.Team
 	t.Name = tf.Name
 	t.CompanyID = tf.CompanyID
-	if err := db.Save(&t).Error; err != nil {
+	if err := dao.DB.Save(&t).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("数据库错误：%s", err),

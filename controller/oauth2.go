@@ -13,24 +13,23 @@ import (
 	"golang.org/x/oauth2/github"
 
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 )
 
 // Oauth2 ..
 type Oauth2 struct {
 	oauth2Config *oauth2.Config
-	systemConfig *model.Config
 }
 
 // ServeOauth2 ..
-func ServeOauth2(r gin.IRoutes, cf *model.Config) {
+func ServeOauth2(r gin.IRoutes) {
 	oa := Oauth2{
 		oauth2Config: &oauth2.Config{
-			ClientID:     cf.GitHub.ClientID,
-			ClientSecret: cf.GitHub.ClientSecret,
+			ClientID:     dao.Conf.GitHub.ClientID,
+			ClientSecret: dao.Conf.GitHub.ClientSecret,
 			Scopes:       []string{},
 			Endpoint:     github.Endpoint,
 		},
-		systemConfig: cf,
 	}
 	r.GET("/oauth2/login", oa.login)
 	r.GET("/oauth2/callback", oa.callback)
@@ -64,7 +63,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 		return
 	}
 	var u model.User
-	err = db.Where("id = ?", gu.GetID()).First(&u).Error
+	err = dao.DB.Where("id = ?", gu.GetID()).First(&u).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		showErrorPage(c, errInfo{
 			Code:  http.StatusBadRequest,
@@ -75,7 +74,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 	}
 	if err == gorm.ErrRecordNotFound {
 		var count uint64
-		err = db.Model(&model.User{}).Count(&count).Error
+		err = dao.DB.Model(&model.User{}).Count(&count).Error
 		if err != nil {
 			showErrorPage(c, errInfo{
 				Code:  http.StatusBadRequest,
@@ -104,7 +103,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 		u.SuperAdmin = count == 0
 	}
 	u.IssueNewToken()
-	err = db.Save(&u).Error
+	err = dao.DB.Save(&u).Error
 	if err != nil {
 		showErrorPage(c, errInfo{
 			Code:  http.StatusBadRequest,
@@ -113,7 +112,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 		}, true)
 		return
 	}
-	c.SetCookie(cfg.Site.CookieName, u.Token, 60*60*24*14, "", "", false, false)
+	c.SetCookie(dao.Conf.Site.CookieName, u.Token, 60*60*24*14, "", "", false, false)
 	c.Status(http.StatusOK)
 	c.Writer.WriteString("<script>window.location.href='/'</script>")
 }

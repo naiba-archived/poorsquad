@@ -152,18 +152,14 @@
                                     {{.Name}}
                                 </td>
                                 <td class="avatar-list">
+                                    {{range .OutsideUsers}}
                                     <p class="ui mini fade reveal circular rotate image">
-                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <img class="visible content" src="{{.AvatarURL}}">
                                         <button class="hidden content circular ui red icon button">
                                             <i class="icon delete"></i>
                                         </button>
                                     </p>
-                                    <p class="ui mini fade reveal circular rotate image">
-                                        <img class="visible content" src="{{$.User.AvatarURL}}">
-                                        <button class="hidden content circular ui red icon button">
-                                            <i class="icon delete"></i>
-                                        </button>
-                                    </p>
+                                    {{end}}
                                 </td>
                                 <td>
                                     {{.SyncedAt|tf}}

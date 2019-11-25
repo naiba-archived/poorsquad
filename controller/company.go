@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 )
 
 // CompanyController ..
@@ -38,7 +40,7 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	var company model.Company
 	var initCompany bool
 	if cf.ID != 0 {
-		if err := db.Where("id = ? AND user_id = ?", cf.ID, u.ID).First(&company).Error; err != nil {
+		if err := dao.DB.Where("id = ? AND user_id = ?", cf.ID, u.ID).First(&company).Error; err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("未找到此公司：%s", err),
@@ -51,7 +53,7 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	company.Brand = cf.Brand
 	company.AvatarURL = cf.AvatarURL
 
-	if err := db.Save(&company).Error; err != nil {
+	if err := dao.DB.Save(&company).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusInternalServerError,
 			Message: fmt.Sprintf("数据库错误：%s", err),
@@ -64,7 +66,7 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 		uc.UserID = u.ID
 		uc.CompanyID = company.ID
 		uc.Permission = model.UCPSuperManager
-		if err := db.Save(&uc).Error; err != nil {
+		if err := dao.DB.Save(&uc).Error; err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusInternalServerError,
 				Message: fmt.Sprintf("数据库错误：%s", err),

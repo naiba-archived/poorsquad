@@ -8,18 +8,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 )
 
-var cfg *model.Config
-var db *gorm.DB
-
 // RunWeb ..
-func RunWeb(cf *model.Config, d *gorm.DB) {
-	cfg = cf
-	db = d
+func RunWeb() {
 	r := gin.Default()
 	r.Use(bindPath)
 	r.SetFuncMap(template.FuncMap{
@@ -27,7 +22,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			return t.Format("2006年1月2号")
 		},
 		"fs": func() string {
-			if !cfg.Debug {
+			if !dao.Conf.Debug {
 				return ""
 			}
 			return fmt.Sprintf("%d", time.Now().UnixNano())
@@ -45,7 +40,7 @@ func RunWeb(cf *model.Config, d *gorm.DB) {
 			Btn:      "返回首页",
 			Redirect: "/",
 		}))
-		ServeOauth2(guestPage, cf)
+		ServeOauth2(guestPage)
 		guestPage.GET("/login", login)
 	}
 
@@ -121,9 +116,9 @@ func commonEnvironment(c *gin.Context, data map[string]interface{}) gin.H {
 	data["MatchedPath"] = c.MustGet("MatchedPath")
 	// 站点标题
 	if t, has := data["Title"]; !has {
-		data["Title"] = cfg.Site.Brand
+		data["Title"] = dao.Conf.Site.Brand
 	} else {
-		data["Title"] = fmt.Sprintf("%s - %s", t, cfg.Site.Brand)
+		data["Title"] = fmt.Sprintf("%s - %s", t, dao.Conf.Site.Brand)
 	}
 	u, ok := c.Get(model.CtxKeyAuthorizedUser)
 	if ok {
@@ -143,7 +138,7 @@ type authorizeOption struct {
 
 func authorize(opt authorizeOption) func(*gin.Context) {
 	return func(c *gin.Context) {
-		token, err := c.Cookie(cfg.Site.CookieName)
+		token, err := c.Cookie(dao.Conf.Site.CookieName)
 		var code uint64 = http.StatusForbidden
 		if opt.Guest {
 			code = http.StatusBadRequest
@@ -157,7 +152,7 @@ func authorize(opt authorizeOption) func(*gin.Context) {
 		}
 		if err == nil {
 			var u model.User
-			err = db.Where("token = ?", token).First(&u).Error
+			err = dao.DB.Where("token = ?", token).First(&u).Error
 			if err == nil {
 				// 已登录且只能游客访问
 				if opt.Guest {

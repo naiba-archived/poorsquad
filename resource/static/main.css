@@ -23,6 +23,7 @@
 .avatar-list img {
     width: 2.6rem !important;
     height: 2.6rem !important;
+    background-color: white;
 }
 
 .card-list {

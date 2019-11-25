@@ -154,6 +154,10 @@ func Sync(db *gorm.DB, account *model.Account, token string) {
 		}
 		// 4. 查找要追加的 Collaborators
 		for k := 0; k < len(cos); k++ {
+			if uint64(cos[k].GetID()) == account.ID {
+				// 越过用户本身
+				continue
+			}
 			for j := 0; j < len(userRepos); j++ {
 				if userRepos[j].UserID == uint64(cos[k].GetID()) {
 					continue
@@ -163,7 +167,7 @@ func Sync(db *gorm.DB, account *model.Account, token string) {
 			ur.UserID = uint64(cos[k].GetID())
 			ur.RepositoryID = repo.ID
 			ur.AccountID = account.ID
-			userRepos = append(userRepos)
+			userRepos = append(userRepos, ur)
 		}
 		// 5. Collaborators 入库
 		for k := 0; k < len(userRepos); k++ {

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/naiba/poorsquad/model"
+	"github.com/naiba/poorsquad/service/dao"
 	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
@@ -38,7 +39,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 
 	var uc model.UserCompany
-	if err := db.Where("user_id = ? AND company_id = ?", u.ID, af.CompanyID).First(&uc).Error; err != nil {
+	if err := dao.DB.Where("user_id = ? AND company_id = ?", u.ID, af.CompanyID).First(&uc).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("您不是该企业的雇员：%s", err),
@@ -67,7 +68,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	a := model.NewAccountFromGitHub(gu)
 	a.Token = af.Token
 	a.CompanyID = af.CompanyID
-	if err := db.Save(&a).Error; err != nil {
+	if err := dao.DB.Save(&a).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("数据库错误：%s", err),
@@ -75,7 +76,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 		return
 	}
 
-	go GitHubService.Sync(db, &a, a.Token)
+	go GitHubService.Sync(dao.DB, &a, a.Token)
 
 	c.JSON(http.StatusOK, model.Response{
 		Code:   http.StatusOK,
