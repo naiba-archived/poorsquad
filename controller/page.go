@@ -102,7 +102,7 @@ func logout(c *gin.Context) {
 	if u.ID != lf.ID {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
-			Message: "用户ID不匹配",
+			Message: "雇员ID不匹配",
 		})
 		return
 	}
