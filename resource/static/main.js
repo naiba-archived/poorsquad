@@ -24,7 +24,7 @@ function showFormModal(modelSelector, formID, URL) {
             form.children('.message').remove()
             btn.toggleClass('loading')
             const data = $(formID).serializeArray().reduce(function (obj, item) {
-                obj[item.name] = item.name.endsWith('_id') ? parseInt(item.value) : item.value;
+                obj[item.name] = (item.name.endsWith('_id') || item.name === 'id') ? parseInt(item.value) : item.value;
                 return obj;
             }, {});
             $.post(URL, JSON.stringify(data)).done(function (resp) {
@@ -53,6 +53,10 @@ function addAccount() {
 
 function addCompany() {
     showFormModal('.tiny.company.modal', '#companyForm', '/api/company');
+}
+
+function addEmployee() {
+    showFormModal('.tiny.employee.modal', '#employeeForm', '/api/employee');
 }
 
 function logout(id) {

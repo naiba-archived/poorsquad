@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 const (
 	_ = iota
 	// UCPOutsideMember 企业外部雇员
@@ -19,5 +17,4 @@ type UserCompany struct {
 	UserID     uint64 `gorm:"primary_key;auto_increment:false"`
 	CompanyID  uint64 `gorm:"primary_key;auto_increment:false"`
 	Permission uint64
-	UpdatedAt  time.Time
 }

@@ -40,10 +40,12 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	var company model.Company
 	var initCompany bool
 	if cf.ID != 0 {
-		if err := dao.DB.Where("id = ? AND user_id = ?", cf.ID, u.ID).First(&company).Error; err != nil {
+		// 验证管理权限
+		company.ID = cf.ID
+		if _, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember); err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("未找到此公司：%s", err),
+				Message: err.Error(),
 			})
 			return
 		}

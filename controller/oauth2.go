@@ -88,7 +88,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			showErrorPage(c, errInfo{
 				Code:  http.StatusBadRequest,
 				Title: "系统错误",
-				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到用户ID"),
+				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到雇员ID"),
 			}, true)
 			return
 		}
@@ -96,7 +96,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 			showErrorPage(c, errInfo{
 				Code:  http.StatusBadRequest,
 				Title: "系统错误",
-				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到用户登录名"),
+				Msg:   fmt.Sprintf("错误信息：%s", "未能获取到雇员登录名"),
 			}, true)
 			return
 		}
@@ -108,7 +108,7 @@ func (oa *Oauth2) callback(c *gin.Context) {
 		showErrorPage(c, errInfo{
 			Code:  http.StatusBadRequest,
 			Title: "系统错误",
-			Msg:   fmt.Sprintf("用户保存失败：%s", err),
+			Msg:   fmt.Sprintf("雇员保存失败：%s", err),
 		}, true)
 		return
 	}

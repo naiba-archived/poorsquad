@@ -1,0 +1,18 @@
+{{define "component/addEmployee"}}
+<div class="ui tiny employee modal transition hidden">
+    <div class="header">添加雇员</div>
+    <div class="content">
+        <form id="employeeForm" class="ui form">
+            <div class="field">
+                <label>GitHub 登录名</label>
+                <input type="text" name="username" placeholder="username">
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">添加<i class="add icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}

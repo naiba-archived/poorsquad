@@ -25,9 +25,10 @@ func main() {
 	if cf.Debug {
 		db = db.Debug()
 	}
+
 	db.AutoMigrate(model.User{}, model.Company{}, model.UserCompany{},
 		model.Account{}, model.Team{}, model.Repository{}, model.UserRepository{},
-		model.UserTeam{}, model.TeamRepository{})
+		model.UserTeam{}, model.TeamRepository{}, model.AccountRepository{})
 
 	dao.Init(db, cache.New(5*time.Minute, 10*time.Minute), cf)
 

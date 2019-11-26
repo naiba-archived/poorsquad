@@ -38,19 +38,13 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	}
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 
-	var uc model.UserCompany
-	if err := dao.DB.Where("user_id = ? AND company_id = ?", u.ID, af.CompanyID).First(&uc).Error; err != nil {
+	// 验证管理权限
+	var comp model.Company
+	comp.ID = af.CompanyID
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPMember); err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
-			Message: fmt.Sprintf("您不是该企业的雇员：%s", err),
-		})
-		return
-	}
-
-	if uc.Permission < model.UCPManager {
-		c.JSON(http.StatusOK, model.Response{
-			Code:    http.StatusBadRequest,
-			Message: "您不是该企业的管理人员",
+			Message: err.Error(),
 		})
 		return
 	}
@@ -76,7 +70,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 		return
 	}
 
-	go GitHubService.Sync(dao.DB, &a, a.Token)
+	go GitHubService.SyncRepositories(ctx, client, &a)
 
 	c.JSON(http.StatusOK, model.Response{
 		Code:   http.StatusOK,
