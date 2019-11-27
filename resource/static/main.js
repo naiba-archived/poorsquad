@@ -1,4 +1,5 @@
 $('.ui.checkbox').checkbox();
+$('.ui.dropdown').dropdown();
 
 function showConfirm(title, content, callFn, extData) {
     const modal = $('.mini.confirm.modal')
@@ -26,7 +27,7 @@ function showFormModal(modelSelector, formID, URL, getData) {
             form.children('.message').remove()
             btn.toggleClass('loading')
             const data = getData ? getData() : $(formID).serializeArray().reduce(function (obj, item) {
-                obj[item.name] = (item.name.endsWith('_id') || item.name === 'id') ? parseInt(item.value) : item.value;
+                obj[item.name] = (item.name.endsWith('_id') || item.name === 'id' || item.name === 'permission') ? parseInt(item.value) : item.value;
                 return obj;
             }, {});
             $.post(URL, JSON.stringify(data)).done(function (resp) {
@@ -81,7 +82,17 @@ function addCompany() {
     showFormModal('.tiny.company.modal', '#companyForm', '/api/company');
 }
 
-function addEmployee() {
+function addEmployee(type, id) {
+    $('#employeeForm .dropdown .item:nth-child(3)').css('display', 'block')
+    $('#employeeForm .dropdown').parent().css('display', 'block')
+    $('#employeeForm input[name=id]').val(id)
+    $('#employeeForm input[name=type]').val(type)
+    $('#employeeForm .dropdown').dropdown('set selected', 1)
+    if (type === 'repository') {
+        $('#employeeForm .dropdown').parent().css('display', 'none')
+    } else if (type === 'team') {
+        $('#employeeForm .dropdown .item:nth-child(3)').css('display', 'none')
+    }
     showFormModal('.tiny.employee.modal', '#employeeForm', '/api/employee');
 }
 

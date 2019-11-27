@@ -70,6 +70,7 @@ func RunWeb() {
 			}))
 			ServeCompany(memberAPI)
 			ServeAccount(memberAPI)
+			ServeEmployee(memberAPI)
 			ServeTeam(memberAPI)
 			memberAPI.POST("/logout", logout)
 		}

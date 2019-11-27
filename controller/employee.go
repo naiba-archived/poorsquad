@@ -117,14 +117,14 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 		err = dao.DB.Save(&userCompany).Error
 		respData = userCompany
 	case "team":
-		if errTeamAdmin != nil {
+		if errCompanyAdmin != nil && errTeamAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", errTeamAdmin),
 			})
 			return
 		}
-		if teamPerm < ef.Permission {
+		if companyPerm < model.UCPManager && (teamPerm < ef.Permission || teamPerm < model.UTPManager) {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", "授权不能高于您自身权限"),
@@ -146,6 +146,14 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			return
 		}
 
+		if companyPerm < model.UCPManager && teamPerm < model.UTPManager {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("访问受限：%s", "您没有权限添加外部雇员"),
+			})
+			return
+		}
+
 		var userReposity model.UserRepository
 		userReposity.RepositoryID = repository.ID
 		userReposity.UserID = user.ID
@@ -159,4 +167,4 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 	})
 }
 
-//TODO: 跟 GitHub 互通
+//TODO: 雇员增减跟 GitHub 互通

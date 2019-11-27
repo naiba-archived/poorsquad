@@ -28,7 +28,7 @@ func SyncAll() {
 	dao.DB.Find(&accounts)
 	for i := 0; i < len(accounts); i++ {
 		account := accounts[i]
-		if account.SyncedAt.Add(time.Minute * 30).After(time.Now()) {
+		if account.SyncedAt.Add(time.Hour * 10).After(time.Now()) {
 			continue
 		}
 		account.SyncedAt = time.Now()

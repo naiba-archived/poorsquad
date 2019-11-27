@@ -97,7 +97,8 @@
                                 <div class="header">
                                     {{.Name}}
                                     <div class="right floated ui mini icon buttons">
-                                        <button class="ui primary button" onclick="bindRepository({{.ID}},{{.Repositories}})"><i
+                                        <button class="ui primary button"
+                                            onclick="bindRepository({{.ID}},{{.Repositories}})"><i
                                                 class="icon cubes"></i></button>
                                         <button class="ui button"><i class="icon edit"></i></button>
                                         <button class="ui red button"><i class="icon delete"></i></button>
@@ -113,7 +114,8 @@
                                         </button>
                                     </p>
                                     <p class="ui inline mini circular rotate image">
-                                        <button class="circular ui primary icon button" onclick="addEmployee()">
+                                        <button class="circular ui primary icon button"
+                                            onclick="addEmployee('team',{{.ID}})">
                                             <i class="icon add"></i>
                                         </button>
                                     </p>
@@ -154,13 +156,19 @@
                                 </td>
                                 <td class="avatar-list">
                                     {{range .OutsideUsers}}
-                                    <p class="ui mini fade reveal circular rotate image">
+                                    <p class="ui inline mini fade reveal circular rotate image">
                                         <img class="visible content" src="{{.AvatarURL}}">
                                         <button class="hidden content circular ui red icon button">
                                             <i class="icon delete"></i>
                                         </button>
                                     </p>
                                     {{end}}
+                                    <p class="ui inline mini circular rotate image">
+                                        <button class="circular ui primary icon button"
+                                            onclick="addEmployee('repository',{{.ID}})">
+                                            <i class="icon add"></i>
+                                        </button>
+                                    </p>
                                 </td>
                                 <td>
                                     {{.SyncedAt|tf}}

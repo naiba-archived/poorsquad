@@ -99,14 +99,11 @@ func (tc *TeamController) bindRepositories(c *gin.Context) {
 	company.ID = t.CompanyID
 	_, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
 	if err != nil {
-		_, err = t.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
-		if err != nil {
-			c.JSON(http.StatusOK, model.Response{
-				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("请求受限：%s", err),
-			})
-			return
-		}
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("请求受限：%s", err),
+		})
+		return
 	}
 
 	// 验证仓库是否存在，并属于此企业
