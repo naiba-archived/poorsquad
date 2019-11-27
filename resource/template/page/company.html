@@ -97,7 +97,8 @@
                                 <div class="header">
                                     {{.Name}}
                                     <div class="right floated ui mini icon buttons">
-                                        <button class="ui primary button"><i class="icon cubes"></i></button>
+                                        <button class="ui primary button" onclick="bindRepository({{.ID}},{{.Repositories}})"><i
+                                                class="icon cubes"></i></button>
                                         <button class="ui button"><i class="icon edit"></i></button>
                                         <button class="ui red button"><i class="icon delete"></i></button>
                                     </div>
@@ -179,6 +180,7 @@
         </div>
     </div>
 </div>
+{{template "component/bindRepository" .}}
 {{template "component/addTeam" .}}
 {{template "component/addAccount" .}}
 {{template "component/addEmployee" .}}

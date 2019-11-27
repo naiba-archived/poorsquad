@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/naiba/poorsquad/model"
 	"github.com/naiba/poorsquad/service/dao"
 	"github.com/naiba/poorsquad/service/github"
+	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
 // TeamController ..
@@ -67,8 +69,8 @@ func (tc *TeamController) addOrEdit(c *gin.Context) {
 }
 
 type teamRepositoriesRequest struct {
-	ID             uint64   `binding:"required" json:"id,omitempty"`
-	RepositoriesID []uint64 `json:"repositories_id,omitempty"`
+	ID           uint64   `binding:"required" json:"id,omitempty"`
+	Repositories []uint64 `json:"repositories,omitempty"`
 }
 
 func (tc *TeamController) bindRepositories(c *gin.Context) {
@@ -97,25 +99,20 @@ func (tc *TeamController) bindRepositories(c *gin.Context) {
 	company.ID = t.CompanyID
 	_, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
 	if err != nil {
-		c.JSON(http.StatusOK, model.Response{
-			Code:    http.StatusBadRequest,
-			Message: fmt.Sprintf("请求受限：%s", err),
-		})
-		return
-	}
-	_, err = t.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
-	if err != nil {
-		c.JSON(http.StatusOK, model.Response{
-			Code:    http.StatusBadRequest,
-			Message: fmt.Sprintf("请求受限：%s", err),
-		})
-		return
+		_, err = t.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
+		if err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("请求受限：%s", err),
+			})
+			return
+		}
 	}
 
 	// 验证仓库是否存在，并属于此企业
 	var count int
-	dao.DB.Table("repositories").Where("account_id IN (SELECT accounts.id FROM accounts WHERE company_id = ?) AND id IN (?)", t.CompanyID, trr.RepositoriesID).Count(&count)
-	if count != len(trr.RepositoriesID) {
+	dao.DB.Table("repositories").Where("account_id IN (SELECT accounts.id FROM accounts WHERE company_id = ?) AND id IN (?)", t.CompanyID, trr.Repositories).Count(&count)
+	if count != len(trr.Repositories) {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("请求受限：%s", "请检查仓库列表中的仓库是否属于本公司"),
@@ -132,38 +129,104 @@ func (tc *TeamController) bindRepositories(c *gin.Context) {
 		return
 	}
 
+	var repo model.Repository
+	var account model.Account
+
 	// 1. 要清理的仓库
 CHECKDEL:
 	for i := 0; i < len(trs); i++ {
 		tr := trs[i]
-		for j := 0; j < len(trr.RepositoriesID); j++ {
-			repoID := trr.RepositoriesID[j]
+		for j := 0; j < len(trr.Repositories); j++ {
+			repoID := trr.Repositories[j]
 			if tr.RepositoryID == repoID {
 				continue CHECKDEL
 			}
 		}
-		github.RemoveRepositoryFromTeam(&t, tr.RepositoryID)
-		dao.DB.Delete(&tr)
+		// 取仓库
+		if err = dao.DB.First(&repo, tr.RepositoryID).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+		// 取拥有人Token
+		if err = dao.DB.First(&account, repo.AccountID).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+		ctx := context.Background()
+		client := GitHubService.NewAPIClient(ctx, account.Token)
+		// GitHub 同步
+		if err = github.RemoveRepositoryFromTeam(ctx, client, &account, &t, &repo); err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+			})
+			return
+		}
+		if err = dao.DB.Delete(&tr).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+
 	}
 	// 2. 要添加的仓库
 CHECKADD:
-	for j := 0; j < len(trr.RepositoriesID); j++ {
-		repoID := trr.RepositoriesID[j]
+	for j := 0; j < len(trr.Repositories); j++ {
+		repoID := trr.Repositories[j]
 		for i := 0; i < len(trs); i++ {
 			tr := trs[i]
 			if tr.RepositoryID == repoID {
 				continue CHECKADD
 			}
 		}
-		github.AddRepositoryFromTeam(&t, repoID)
-		dao.DB.Save(&model.TeamRepository{
+		// 取仓库
+		if err = dao.DB.First(&repo, repoID).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+		// 取拥有人Token
+		if err = dao.DB.First(&account, repo.AccountID).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+		ctx := context.Background()
+		client := GitHubService.NewAPIClient(ctx, account.Token)
+		// GitHub 同步
+		if err = github.AddRepositoryFromTeam(ctx, client, &account, &t, &repo); err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+			})
+			return
+		}
+		if err = dao.DB.Save(&model.TeamRepository{
 			TeamID:       t.ID,
 			RepositoryID: repoID,
-		})
+		}).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, model.Response{
 		Code:   http.StatusOK,
-		Result: trr.RepositoriesID,
+		Result: trr.Repositories,
 	})
 }

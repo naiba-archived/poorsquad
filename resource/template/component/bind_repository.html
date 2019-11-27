@@ -1,0 +1,24 @@
+{{define "component/bindRepository"}}
+<div class="ui tiny bind-repository modal transition hidden">
+    <div class="header">绑定 GitHub 仓库</div>
+    <div class="content">
+        <form id="bindRepositoryForm" class="ui form">
+            <input name="id" type="hidden">
+            {{range .Repositories}}
+            <div class="inline field">
+                <div class="ui slider id-{{.ID}} checkbox">
+                    <input name="{{.ID}}" type="checkbox" tabindex="0" class="hidden">
+                    <label>「{{.Name}}」{{if .Description}}：{{.Description}}{{end}}</label>
+                </div>
+                <label></label>
+            </div>
+            {{end}}
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">绑定<i class="checkmark icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}

@@ -74,6 +74,9 @@ func company(c *gin.Context) {
 
 	var teams []model.Team
 	dao.DB.Where("company_id = ? ", compID).Find(&teams)
+	for i := 0; i < len(teams); i++ {
+		teams[i].FetchRepositories(dao.DB)
+	}
 
 	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{
 		"Title":        comp.Brand + "- 企业",

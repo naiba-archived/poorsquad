@@ -1,3 +1,5 @@
+$('.ui.checkbox').checkbox();
+
 function showConfirm(title, content, callFn, extData) {
     const modal = $('.mini.confirm.modal')
     modal.children('.header').text(title)
@@ -11,7 +13,7 @@ function showConfirm(title, content, callFn, extData) {
     }).modal('show')
 }
 
-function showFormModal(modelSelector, formID, URL) {
+function showFormModal(modelSelector, formID, URL, getData) {
     $(modelSelector).modal({
         closable: true,
         onApprove: function () {
@@ -23,7 +25,7 @@ function showFormModal(modelSelector, formID, URL) {
             }
             form.children('.message').remove()
             btn.toggleClass('loading')
-            const data = $(formID).serializeArray().reduce(function (obj, item) {
+            const data = getData ? getData() : $(formID).serializeArray().reduce(function (obj, item) {
                 obj[item.name] = (item.name.endsWith('_id') || item.name === 'id') ? parseInt(item.value) : item.value;
                 return obj;
             }, {});
@@ -45,6 +47,30 @@ function showFormModal(modelSelector, formID, URL) {
 
 function addTeam() {
     showFormModal('.tiny.team.modal', '#teamForm', '/api/team');
+}
+
+function bindRepository(id, repos) {
+    $('#bindRepositoryForm input[name=id]').val(id)
+    $('#bindRepositoryForm .checkbox').checkbox('uncheck')
+    if (repos) {
+        for (let i = 0; i < repos.length; i++) {
+            $('#bindRepositoryForm .id-' + repos[i]).checkbox('check')
+        }
+    }
+    getData = function () {
+        return $('#bindRepositoryForm').serializeArray().reduce(function (obj, item) {
+            if (!obj['repositories']) {
+                obj['repositories'] = []
+            }
+            if (item.value === 'on') {
+                obj['repositories'].push(parseInt(item.name))
+            } else {
+                obj[item.name] = (item.name.endsWith('_id') || item.name === 'id') ? parseInt(item.value) : item.value;
+            }
+            return obj;
+        }, {})
+    }
+    showFormModal('.tiny.bind-repository.modal', '#bindRepositoryForm', '/api/team/repositories', getData)
 }
 
 function addAccount() {

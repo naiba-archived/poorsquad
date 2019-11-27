@@ -68,3 +68,17 @@ func (r *Repository) RelatedOutsideUsers(db *gorm.DB) {
 		r.OutsideUsers = append(r.OutsideUsers, u)
 	}
 }
+
+// GetTeams ..
+func (r *Repository) GetTeams(db *gorm.DB) ([]uint64, error) {
+	// 取拥有仓库的 team 列表
+	var teamRepositories []TeamRepository
+	if err := db.Where("repository_id = ?", r.ID).Find(&teamRepositories).Error; err != nil {
+		return nil, err
+	}
+	var teamIDs []uint64
+	for i := 0; i < len(teamRepositories); i++ {
+		teamIDs = append(teamIDs, teamRepositories[i].TeamID)
+	}
+	return teamIDs, nil
+}
