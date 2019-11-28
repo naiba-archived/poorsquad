@@ -76,6 +76,15 @@ func company(c *gin.Context) {
 	dao.DB.Where("company_id = ? ", compID).Find(&teams)
 	for i := 0; i < len(teams); i++ {
 		teams[i].FetchRepositories(dao.DB)
+		teams[i].FetchEmployees(dao.DB)
+		for j := 0; j < len(teams[i].Managers); j++ {
+			user, _ := dao.GetUserByID(teams[i].Managers[j].ID)
+			teams[i].Managers[j] = user
+		}
+		for j := 0; j < len(teams[i].Employees); j++ {
+			user, _ := dao.GetUserByID(teams[i].Employees[j].ID)
+			teams[i].Employees[j] = user
+		}
 	}
 
 	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{

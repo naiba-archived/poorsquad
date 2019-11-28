@@ -106,13 +106,34 @@
                                 </div>
                                 <div class="meta">创建于 {{.CreatedAt|tf}}</div>
                                 <div class="description avatar-list">
+                                    {{if .Managers}}
+                                    <div class="ui horizontal divider">组长</div>
+                                    {{range .Managers}}
                                     <p class="ui inline mini fade reveal circular rotate image">
-                                        <img class="visible content" src="{{$.User.AvatarURL}}">
+                                        <img class="visible content" src="{{.AvatarURL}}">
                                         <button class="hidden content circular ui red icon button"
                                             onclick="alert('bingo')">
                                             <i class="icon delete"></i>
                                         </button>
                                     </p>
+                                    {{end}}
+                                    <p class="ui inline mini circular rotate image">
+                                        <button class="circular ui primary icon button"
+                                            onclick="addEmployee('team',{{.ID}})">
+                                            <i class="icon add"></i>
+                                        </button>
+                                    </p>
+                                    {{end}}
+                                    <div class="ui horizontal divider">组员</div>
+                                    {{range .Employees}}
+                                    <p class="ui inline mini fade reveal circular rotate image">
+                                        <img class="visible content" src="{{.AvatarURL}}">
+                                        <button class="hidden content circular ui red icon button"
+                                            onclick="alert('bingo')">
+                                            <i class="icon delete"></i>
+                                        </button>
+                                    </p>
+                                    {{end}}
                                     <p class="ui inline mini circular rotate image">
                                         <button class="circular ui primary icon button"
                                             onclick="addEmployee('team',{{.ID}})">

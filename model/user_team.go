@@ -8,8 +8,6 @@ import (
 
 const (
 	_ = iota
-	// UTPOutsideMember 小组外部成员
-	UTPOutsideMember
 	// UTPMember 小组成员
 	UTPMember
 	// UTPManager 小组管理员

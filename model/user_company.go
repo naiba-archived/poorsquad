@@ -2,8 +2,6 @@ package model
 
 const (
 	_ = iota
-	// UCPOutsideMember 企业外部雇员
-	UCPOutsideMember
 	// UCPMember 企业成员
 	UCPMember
 	// UCPManager 企业管理员

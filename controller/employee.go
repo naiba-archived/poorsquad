@@ -127,7 +127,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-		if companyPerm <= model.UCPManager && (teamPerm <= ef.Permission || teamPerm < model.UTPManager) {
+		if companyPerm < model.UCPManager && (teamPerm <= ef.Permission || teamPerm < model.UTPManager) {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", "授权不能高于您自身权限"),
