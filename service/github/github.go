@@ -113,6 +113,7 @@ func SyncCollaborator(ctx context.Context, client *GitHubAPI.Client, account *mo
 	var userRepos []model.UserRepository
 	dao.DB.Where("repository_id = ?", repo.ID).Find(&userRepos)
 	var cos []*GitHubAPI.User
+	invitation := make(map[uint64]int64)
 	// 1. 拉取 Collaborators
 	nextCr := 1
 	for nextCr != 0 {
@@ -125,6 +126,20 @@ func SyncCollaborator(ctx context.Context, client *GitHubAPI.Client, account *mo
 		}
 		nextCr = respCr.NextPage
 		cos = append(cos, cosInner...)
+	}
+	var cov []*GitHubAPI.RepositoryInvitation
+	// 1.2 拉取 Invitations
+	nextCr = 1
+	for nextCr != 0 {
+		optCr := &GitHubAPI.ListOptions{}
+		optCr.PerPage = 100
+		optCr.Page = nextCr
+		covInner, respCr, err := client.Repositories.ListInvitations(ctx, account.Login, repo.Name, optCr)
+		if err != nil {
+			return err
+		}
+		nextCr = respCr.NextPage
+		cov = append(cov, covInner...)
 	}
 	// 2. 雇员入库
 	for j := 0; j < len(cos); j++ {
@@ -139,6 +154,22 @@ func SyncCollaborator(ctx context.Context, client *GitHubAPI.Client, account *mo
 		} else {
 			newUser.IssueNewToken()
 		}
+		dao.DB.Save(&newUser)
+	}
+	// 2.2 邀请中的人员入库
+	for j := 0; j < len(cov); j++ {
+		newUser := model.NewUserFromGitHub(cov[j].GetInvitee())
+		var oldUser model.User
+		if err := dao.DB.Where("id = ?", newUser.ID).First(&oldUser).Error; err == nil {
+			if oldUser.Token == "" {
+				newUser.IssueNewToken()
+			} else {
+				newUser.Token = oldUser.Token
+			}
+		} else {
+			newUser.IssueNewToken()
+		}
+		invitation[newUser.ID] = cov[j].GetID()
 		dao.DB.Save(&newUser)
 	}
 	// 3. 查找要删除的 Collaborators 进行清理
@@ -167,6 +198,7 @@ CHECKADD:
 		var ur model.UserRepository
 		ur.UserID = uint64(cos[k].GetID())
 		ur.RepositoryID = repo.ID
+		ur.InvitationID = invitation[ur.UserID]
 		userRepos = append(userRepos, ur)
 	}
 	// 5. Collaborators 入库
@@ -192,7 +224,7 @@ func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, acc
 	}
 	// 从仓库中移除用户
 	for i := 0; i < len(users); i++ {
-		if err := RemoveEmployeeFromRepository(ctx, client, account, repository, users[i].Login); err != nil {
+		if err := RemoveEmployeeFromRepository(ctx, client, account, repository, &users[i]); err != nil {
 			return err
 		}
 	}
@@ -240,7 +272,7 @@ func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *m
 }
 
 // RemoveEmployeeFromTeam ..
-func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, loginName string) error {
+func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, user *model.User) error {
 	// 1. 取得绑定的仓库列表
 	var repositories []model.Repository
 	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
@@ -249,7 +281,7 @@ func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, accou
 	}
 	// 2. 挨个仓库删除 Collaborator
 	for i := 0; i < len(repositories); i++ {
-		if err := RemoveEmployeeFromRepository(ctx, client, account, &repositories[i], loginName); err != nil {
+		if err := RemoveEmployeeFromRepository(ctx, client, account, &repositories[i], user); err != nil {
 			return err
 		}
 	}
@@ -265,9 +297,19 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 }
 
 // RemoveEmployeeFromRepository ..
-func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, loginName string) error {
-	if _, err := client.Repositories.RemoveCollaborator(ctx, account.Login, repository.Name, loginName); err != nil {
+func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
+	var ur model.UserRepository
+	if err := dao.DB.Where("user_id = ? AND repository_id = ?", user.ID, repository.ID).First(&ur).Error; err != nil {
 		return err
+	}
+	if ur.InvitationID > 0 {
+		if _, err := client.Repositories.DeleteInvitation(ctx, account.Login, repository.Name, ur.InvitationID); err != nil {
+			return err
+		}
+	} else {
+		if _, err := client.Repositories.RemoveCollaborator(ctx, account.Login, repository.Name, user.Login); err != nil {
+			return err
+		}
 	}
 	return nil
 }

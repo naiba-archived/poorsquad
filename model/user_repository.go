@@ -4,5 +4,5 @@ package model
 type UserRepository struct {
 	UserID       uint64 `gorm:"primary_key;auto_increment:false"`
 	RepositoryID uint64 `gorm:"primary_key;auto_increment:false"`
-	Pending      bool
+	InvitationID int64
 }

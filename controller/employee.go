@@ -249,7 +249,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 		}
 		ctx := context.Background()
 		client := github.NewAPIClient(ctx, account.Token)
-		if err := github.RemoveEmployeeFromRepository(ctx, client, &account, &repository, user.Login); err != nil {
+		if err := github.RemoveEmployeeFromRepository(ctx, client, &account, &repository, &user); err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("GitHub同步失败：%s", err),
