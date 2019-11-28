@@ -223,7 +223,7 @@ func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, accoun
 }
 
 // AddEmployeeToTeam ..
-func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, username string) error {
+func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, loginName string) error {
 	// 1. 取得绑定的仓库列表
 	var repositories []model.Repository
 	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
@@ -232,7 +232,7 @@ func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *m
 	}
 	// 2. 挨个仓库添加 Collaborator
 	for i := 0; i < len(repositories); i++ {
-		if err := AddEmployeeToRepository(ctx, client, account, &repositories[i], username); err != nil {
+		if err := AddEmployeeToRepository(ctx, client, account, &repositories[i], loginName); err != nil {
 			return err
 		}
 	}
@@ -240,7 +240,7 @@ func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *m
 }
 
 // RemoveEmployeeFromTeam ..
-func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, username string) error {
+func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, loginName string) error {
 	// 1. 取得绑定的仓库列表
 	var repositories []model.Repository
 	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
@@ -249,7 +249,7 @@ func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, accou
 	}
 	// 2. 挨个仓库删除 Collaborator
 	for i := 0; i < len(repositories); i++ {
-		if err := RemoveEmployeeFromRepository(ctx, client, account, &repositories[i], username); err != nil {
+		if err := RemoveEmployeeFromRepository(ctx, client, account, &repositories[i], loginName); err != nil {
 			return err
 		}
 	}
@@ -257,16 +257,16 @@ func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, accou
 }
 
 // AddEmployeeToRepository ..
-func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, username string) error {
-	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, username, nil); err != nil {
+func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, loginName string) error {
+	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, loginName, nil); err != nil {
 		return err
 	}
 	return nil
 }
 
 // RemoveEmployeeFromRepository ..
-func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, username string) error {
-	if _, err := client.Repositories.RemoveCollaborator(ctx, account.Login, repository.Name, username); err != nil {
+func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, loginName string) error {
+	if _, err := client.Repositories.RemoveCollaborator(ctx, account.Login, repository.Name, loginName); err != nil {
 		return err
 	}
 	return nil

@@ -54,10 +54,10 @@ func company(c *gin.Context) {
 	dao.DB.Where("account_id IN (?) ", accountID).Find(&repos)
 	// 外部雇员
 	for i := 0; i < len(repos); i++ {
-		repos[i].RelatedOutsideUsers(dao.DB)
+		repos[i].RelatedOutsideCollaborators(dao.DB)
 		// 拉取外部雇员详细信息
-		for j := 0; j < len(repos[i].OutsideUsers); j++ {
-			user, err := dao.GetUserByID(repos[i].OutsideUsers[j].ID)
+		for j := 0; j < len(repos[i].OutsideCollaborators); j++ {
+			user, err := dao.GetUserByID(repos[i].OutsideCollaborators[j].ID)
 			if err != nil {
 				showErrorPage(c, errInfo{
 					Code:  http.StatusInternalServerError,
@@ -68,7 +68,7 @@ func company(c *gin.Context) {
 				}, true)
 				return
 			}
-			repos[i].OutsideUsers[j] = user
+			repos[i].OutsideCollaborators[j] = user
 		}
 	}
 

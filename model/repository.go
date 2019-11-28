@@ -19,7 +19,7 @@ type Repository struct {
 	SyncedAt  time.Time // 最后一次同步
 	AccountID uint64
 
-	OutsideUsers []User
+	OutsideCollaborators []User
 }
 
 // NewRepositoryFromGitHub ..
@@ -47,10 +47,10 @@ type userIDres struct {
 	UserID uint64
 }
 
-// RelatedOutsideUsers ..
-func (r *Repository) RelatedOutsideUsers(db *gorm.DB) {
+// RelatedOutsideCollaborators ..
+func (r *Repository) RelatedOutsideCollaborators(db *gorm.DB) error {
 	var ids []userIDres
-	db.Raw(`SELECT user_repositories.user_id
+	err := db.Raw(`SELECT user_repositories.user_id
 	FROM user_repositories
 	WHERE user_repositories.user_id
 		NOT IN (
@@ -61,12 +61,49 @@ func (r *Repository) RelatedOutsideUsers(db *gorm.DB) {
 				WHERE team_repositories.repository_id = ?
 			)
 		)
-	AND user_repositories.repository_id = ?`, r.ID, r.ID).Scan(&ids)
+	AND user_repositories.repository_id = ?`, r.ID, r.ID).Scan(&ids).Error
+	if err != nil {
+		return err
+	}
 	for i := 0; i < len(ids); i++ {
 		var u User
 		u.ID = ids[i].UserID
-		r.OutsideUsers = append(r.OutsideUsers, u)
+		r.OutsideCollaborators = append(r.OutsideCollaborators, u)
 	}
+	return nil
+}
+
+// IsOutsideCollaborator 是不是只在一个 Team 的开发者
+func (r *Repository) IsOutsideCollaborator(db *gorm.DB, userID uint64) (bool, error) {
+	if len(r.OutsideCollaborators) == 0 {
+		if err := r.RelatedOutsideCollaborators(db); err != nil {
+			return false, err
+		}
+	}
+	for i := 0; i < len(r.OutsideCollaborators); i++ {
+		if r.OutsideCollaborators[i].ID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// IsIndividualCollaborator 是不是只在一个 Team 的开发者
+func (r *Repository) IsIndividualCollaborator(db *gorm.DB, userID uint64) (bool, error) {
+	teams, err := r.GetTeams(db)
+	if err != nil {
+		return false, err
+	}
+	individual, err := GetIndividualFromTeams(db, teams)
+	if err != nil {
+		return false, err
+	}
+	for i := 0; i < len(individual); i++ {
+		if individual[i] == userID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // GetTeams ..

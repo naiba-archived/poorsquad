@@ -88,12 +88,28 @@ function addEmployee(type, id) {
     $('#employeeForm input[name=id]').val(id)
     $('#employeeForm input[name=type]').val(type)
     $('#employeeForm .dropdown').dropdown('set selected', 1)
-    if (type === 'repository') {
+    if (type === 'repositoryOutsideCollaborator') {
         $('#employeeForm .dropdown').parent().css('display', 'none')
     } else if (type === 'team') {
         $('#employeeForm .dropdown .item:nth-child(3)').css('display', 'none')
     }
     showFormModal('.tiny.employee.modal', '#employeeForm', '/api/employee');
+}
+
+function removeEmployee(data) {
+    $.ajax({
+        url: '/api/employee/' + data.type + '/' + data.id + '/' + data.userID,
+        type: 'DELETE',
+    }).done(resp => {
+        if (resp.code == 200) {
+            alert('移出成功')
+            window.location.reload()
+        } else {
+            alert('移出失败 ' + resp.code + '：' + resp.message)
+        }
+    }).fail(err => {
+        lert('网络错误：' + err.responseText)
+    });
 }
 
 function logout(id) {
