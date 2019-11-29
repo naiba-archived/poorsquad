@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	GitHubAPI "github.com/google/go-github/v28/github"
@@ -210,87 +211,136 @@ CHECKADD:
 }
 
 // RemoveRepositoryFromTeam ..
-func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) error {
+func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) []error {
+	var errors []error
 	teams, err := repository.GetTeams(dao.DB)
 	if err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 	individual, err := model.GetIndividualFromTeams(dao.DB, teams)
 	if err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 	var users []model.User
 	if err = dao.DB.Where("id in (?)", individual).Find(&users).Error; err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 	// 从仓库中移除用户
 	for i := 0; i < len(users); i++ {
 		if err := RemoveEmployeeFromRepository(ctx, client, account, repository, &users[i]); err != nil {
-			return err
+			errors = append(errors, err)
 		}
 	}
-	return nil
+	return errors
 }
 
 // AddRepositoryFromTeam ..
-func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) error {
+func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) []error {
+	var errors []error
 	teams, err := repository.GetTeams(dao.DB)
 	if err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 	individual, err := model.GetIndividualFromTeams(dao.DB, teams)
 	if err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
 	var users []model.User
 	if err = dao.DB.Where("id in (?)", individual).Find(&users).Error; err != nil {
-		return err
+		errors = append(errors, err)
+		return errors
 	}
-	// 从仓库中移除用户
+	// 从仓库中添加用户
 	for i := 0; i < len(users); i++ {
 		if err := AddEmployeeToRepository(ctx, client, account, repository, &users[i]); err != nil {
-			return err
+			errors = append(errors, err)
 		}
 	}
-	return nil
+	return errors
 }
 
 // AddEmployeeToTeam ..
-func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, user *model.User) error {
+func AddEmployeeToTeam(team *model.Team, user *model.User, permission uint64) []error {
+	var errors []error
 	// 1. 取得绑定的仓库列表
 	var repositories []model.Repository
-	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
-		Find(repositories).Error; err != nil {
-		return err
+	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repository_id AND team_id =?)", team.ID).
+		Find(&repositories).Error; err != nil {
+		errors = append(errors, err)
+		return errors
 	}
 	// 2. 挨个仓库添加 Collaborator
+	ctx := context.Background()
 	for i := 0; i < len(repositories); i++ {
-		if err := AddEmployeeToRepository(ctx, client, account, &repositories[i], user); err != nil {
-			return err
+		var account model.Account
+		if err := dao.DB.Where("id = ?", repositories[i].AccountID).First(&account).Error; err != nil {
+			errors = append(errors, err)
+			return errors
+		}
+		client := NewAPIClient(ctx, account.Token)
+		if err := AddEmployeeToRepository(ctx, client, &account, &repositories[i], user); err != nil {
+			errors = append(errors, err)
 		}
 	}
-	return nil
+
+	var userTeam model.UserTeam
+	userTeam.TeamID = team.ID
+	userTeam.UserID = user.ID
+	userTeam.Permission = permission
+	if err := dao.DB.Save(&userTeam).Error; err != nil {
+		errors = append(errors, err)
+	}
+	return errors
 }
 
 // RemoveEmployeeFromTeam ..
-func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, user *model.User) error {
-	// 1. 取得绑定的仓库列表
-	var repositories []model.Repository
-	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
-		Find(repositories).Error; err != nil {
-		return err
-	}
-	// 2. 挨个仓库删除 Collaborator
-	for i := 0; i < len(repositories); i++ {
-		if err := RemoveEmployeeFromRepository(ctx, client, account, &repositories[i], user); err != nil {
-			return err
+func RemoveEmployeeFromTeam(team *model.Team, user *model.User) []error {
+	var errors []error
+	// 挨个仓库删除 Collaborator
+	if len(team.RepositoriesID) > 0 {
+		var repos []model.Repository
+		if err := dao.DB.Where("id in (?)", team.RepositoriesID).Error; err != nil {
+			errors = append(errors, err)
+			return errors
+		}
+
+		ctx := context.Background()
+		for i := 0; i < len(repos); i++ {
+			var account model.Account
+			if err := dao.DB.Where("id = ?", repos[i].AccountID).First(&account).Error; err != nil {
+				errors = append(errors, err)
+				return errors
+			}
+			client := NewAPIClient(ctx, account.Token)
+			if err := RemoveEmployeeFromRepository(ctx, client, &account, &repos[i], user); err != nil {
+				errors = append(errors, err)
+			}
 		}
 	}
-	return nil
+
+	if err := dao.DB.Delete(&model.UserTeam{
+		UserID: user.ID,
+		TeamID: team.ID,
+	}).Error; err != nil {
+		errors = append(errors, err)
+	}
+
+	return errors
 }
 
 // AddEmployeeToRepository ..
 func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
+	var ur model.UserRepository
+	ur.UserID = user.ID
+	ur.RepositoryID = repository.ID
+	if err := dao.DB.First(&ur).Error; err == nil {
+		return fmt.Errorf("用户「%s」已在仓库中", user.Login)
+	}
 	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, user.Login, nil); err != nil {
 		return err
 	}
@@ -299,6 +349,9 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 
 // RemoveEmployeeFromRepository ..
 func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
+	if ok, err := repository.IsOutsideCollaborator(dao.DB, user.ID); err != nil || !ok {
+		return fmt.Errorf("用户「%s」在其他小组中还具有访问权限", user.Login)
+	}
 	var ur model.UserRepository
 	if err := dao.DB.Where("user_id = ? AND repository_id = ?", user.ID, repository.ID).First(&ur).Error; err != nil {
 		return err

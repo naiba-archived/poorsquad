@@ -135,12 +135,14 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-		var userTeam model.UserTeam
-		userTeam.TeamID = team.ID
-		userTeam.UserID = user.ID
-		userTeam.Permission = ef.Permission
-		err = dao.DB.Save(&userTeam).Error
-		respData = userTeam
+		if errs := github.AddEmployeeToTeam(&team, &user, ef.Permission); errs != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusOK,
+				Message: fmt.Sprintf("GitHub 同步：%s", errs),
+			})
+			return
+		}
+		respData = user.Login
 	case "repository":
 		if errTeamAdmin != nil && errCompanyAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
@@ -162,7 +164,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 		if err := github.AddEmployeeToRepository(ctx, client, &account, &repository, &user); err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+				Message: fmt.Sprintf("GitHub 同步：%s", err),
 			})
 			return
 		}
@@ -237,6 +239,32 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 	_, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
 	_, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
 	switch what {
+	case "teamEmployee":
+		if errCompanyAdmin != nil && errTeamAdmin != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("访问受限：%s", "权限不足"),
+			})
+			return
+		}
+		_, errUserTeamAdmin := team.CheckUserPermission(dao.DB, user.ID, model.UTPMember)
+		if errCompanyAdmin != nil && errUserTeamAdmin == nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("访问受限：%s", "只能企业管理员移出组长"),
+			})
+			return
+		}
+		team.FetchRepositoriesID(dao.DB)
+		if errs := github.RemoveEmployeeFromTeam(&team, &user); errs != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusOK,
+				Message: fmt.Sprintf("GitHub 同步：%s", errs),
+			})
+			return
+		}
+		respData = user.ID
+
 	case "repositoryOutsideCollaborator":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
@@ -245,19 +273,12 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
-		if ok, err := repository.IsOutsideCollaborator(dao.DB, user.ID); err != nil || !ok {
-			c.JSON(http.StatusOK, model.Response{
-				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("访问受限：%s", "此用户不是外部雇员"),
-			})
-			return
-		}
 		ctx := context.Background()
 		client := github.NewAPIClient(ctx, account.Token)
 		if err := github.RemoveEmployeeFromRepository(ctx, client, &account, &repository, &user); err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("GitHub同步失败：%s", err),
+				Message: fmt.Sprintf("GitHub 同步：%s", err),
 			})
 			return
 		}
@@ -267,7 +288,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 		}).Error; err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("GitHub同步失败：%s", err),
+				Message: fmt.Sprintf("GitHub 同步：%s", err),
 			})
 			return
 		}

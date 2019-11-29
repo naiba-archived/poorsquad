@@ -13,9 +13,9 @@ type Team struct {
 
 	CompanyID uint64 `json:"company_id,omitempty"`
 
-	Repositories []uint64 `gorm:"-"`
-	Managers     []User
-	Employees    []User
+	RepositoriesID []uint64 `gorm:"-"`
+	Managers       []User
+	Employees      []User
 }
 
 // CheckUserPermission ..
@@ -30,12 +30,12 @@ func (t *Team) CheckUserPermission(db *gorm.DB, userID uint64, permission uint64
 	return ut.Permission, nil
 }
 
-// FetchRepositories ..
-func (t *Team) FetchRepositories(db *gorm.DB) {
+// FetchRepositoriesID ..
+func (t *Team) FetchRepositoriesID(db *gorm.DB) {
 	var repos []TeamRepository
 	db.Where("team_id = ?", t.ID).Find(&repos)
 	for i := 0; i < len(repos); i++ {
-		t.Repositories = append(t.Repositories, repos[i].RepositoryID)
+		t.RepositoriesID = append(t.RepositoriesID, repos[i].RepositoryID)
 	}
 }
 

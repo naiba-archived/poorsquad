@@ -158,10 +158,10 @@ CHECKDEL:
 		ctx := context.Background()
 		client := GitHubService.NewAPIClient(ctx, account.Token)
 		// GitHub 同步
-		if err = github.RemoveRepositoryFromTeam(ctx, client, &account, &t, &repo); err != nil {
+		if errs := github.RemoveRepositoryFromTeam(ctx, client, &account, &t, &repo); errs != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusInternalServerError,
-				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+				Message: fmt.Sprintf("GitHub同步错误：%s", errs),
 			})
 			return
 		}
@@ -203,10 +203,10 @@ CHECKADD:
 		ctx := context.Background()
 		client := GitHubService.NewAPIClient(ctx, account.Token)
 		// GitHub 同步
-		if err = github.AddRepositoryFromTeam(ctx, client, &account, &t, &repo); err != nil {
+		if errs := github.AddRepositoryFromTeam(ctx, client, &account, &t, &repo); errs != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusInternalServerError,
-				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+				Message: fmt.Sprintf("GitHub同步错误：%s", errs),
 			})
 			return
 		}

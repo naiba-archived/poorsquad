@@ -32,6 +32,9 @@ function showFormModal(modelSelector, formID, URL, getData) {
             }, {});
             $.post(URL, JSON.stringify(data)).done(function (resp) {
                 if (resp.code == 200) {
+                    if (resp.message) {
+                        alert(resp.message)
+                    }
                     window.location.reload()
                 } else {
                     form.append(`<div class="ui negative message"><div class="header">操作失败</div><p>` + resp.message + `</p></div>`)
@@ -102,7 +105,11 @@ function removeEmployee(data) {
         type: 'DELETE',
     }).done(resp => {
         if (resp.code == 200) {
-            alert('移出成功')
+            if (resp.message) {
+                alert(resp.message)
+            } else {
+                alert('移出成功')
+            }
             window.location.reload()
         } else {
             alert('移出失败 ' + resp.code + '：' + resp.message)
