@@ -10,6 +10,7 @@ import (
 	"github.com/naiba/poorsquad/model"
 	"github.com/naiba/poorsquad/service/dao"
 	"github.com/naiba/poorsquad/service/github"
+	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
 // EmployeeController ..
@@ -148,7 +149,6 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-
 		if companyPerm < model.UCPManager && teamPerm < model.UTPManager {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
@@ -157,11 +157,16 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			return
 		}
 
-		var userReposity model.UserRepository
-		userReposity.RepositoryID = repository.ID
-		userReposity.UserID = user.ID
-		err = dao.DB.Save(&userReposity).Error
-		respData = userReposity
+		ctx := context.Background()
+		client := GitHubService.NewAPIClient(ctx, account.Token)
+		if err := github.AddEmployeeToRepository(ctx, client, &account, &repository, &user); err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("GitHub同步错误：%s", err),
+			})
+			return
+		}
+		respData = user
 	}
 
 	c.JSON(http.StatusOK, model.Response{

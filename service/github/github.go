@@ -34,12 +34,12 @@ func SyncAll() {
 		account.SyncedAt = time.Now()
 		dao.DB.Save(&account)
 		ctx := context.Background()
-		go SyncRepositories(ctx, NewAPIClient(ctx, account.Token), &account)
+		go AccountSync(ctx, NewAPIClient(ctx, account.Token), &account)
 	}
 }
 
-// SyncRepositories ..
-func SyncRepositories(ctx context.Context, client *GitHubAPI.Client, account *model.Account) {
+// AccountSync ..
+func AccountSync(ctx context.Context, client *GitHubAPI.Client, account *model.Account) {
 	var errInfo string
 	defer func() {
 		// 最终步骤，更新当前账号的最后同步时间
@@ -101,15 +101,15 @@ CHECKADD:
 	// ========================= Collaborators 同步 =========================
 	for i := 0; i < len(reposInDB); i++ {
 		repo := reposInDB[i]
-		SyncCollaborator(ctx, client, account, &repo)
+		RepositorySync(ctx, client, account, &repo)
 		// 6. Repository 入库
 		repo.SyncedAt = time.Now()
 		dao.DB.Save(repo)
 	}
 }
 
-// SyncCollaborator ..
-func SyncCollaborator(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repo *model.Repository) error {
+// RepositorySync ..
+func RepositorySync(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repo *model.Repository) error {
 	var userRepos []model.UserRepository
 	dao.DB.Where("repository_id = ?", repo.ID).Find(&userRepos)
 	var cos []*GitHubAPI.User
@@ -171,6 +171,7 @@ func SyncCollaborator(ctx context.Context, client *GitHubAPI.Client, account *mo
 		}
 		invitation[newUser.ID] = cov[j].GetID()
 		dao.DB.Save(&newUser)
+		cos = append(cos, cov[j].GetInvitee())
 	}
 	// 3. 查找要删除的 Collaborators 进行清理
 CHECKDEL:
@@ -247,7 +248,7 @@ func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, accoun
 	}
 	// 从仓库中移除用户
 	for i := 0; i < len(users); i++ {
-		if err := AddEmployeeToRepository(ctx, client, account, repository, users[i].Login); err != nil {
+		if err := AddEmployeeToRepository(ctx, client, account, repository, &users[i]); err != nil {
 			return err
 		}
 	}
@@ -255,7 +256,7 @@ func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, accoun
 }
 
 // AddEmployeeToTeam ..
-func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, loginName string) error {
+func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, user *model.User) error {
 	// 1. 取得绑定的仓库列表
 	var repositories []model.Repository
 	if err := dao.DB.Table("repositories").Joins("INNER JOIN team_repositories ON (repositories.id = team_repositories.repositoriy_id AND team_id =?)", team.ID).
@@ -264,7 +265,7 @@ func AddEmployeeToTeam(ctx context.Context, client *GitHubAPI.Client, account *m
 	}
 	// 2. 挨个仓库添加 Collaborator
 	for i := 0; i < len(repositories); i++ {
-		if err := AddEmployeeToRepository(ctx, client, account, &repositories[i], loginName); err != nil {
+		if err := AddEmployeeToRepository(ctx, client, account, &repositories[i], user); err != nil {
 			return err
 		}
 	}
@@ -289,11 +290,11 @@ func RemoveEmployeeFromTeam(ctx context.Context, client *GitHubAPI.Client, accou
 }
 
 // AddEmployeeToRepository ..
-func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, loginName string) error {
-	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, loginName, nil); err != nil {
+func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
+	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, user.Login, nil); err != nil {
 		return err
 	}
-	return nil
+	return RepositorySync(ctx, client, account, repository)
 }
 
 // RemoveEmployeeFromRepository ..
