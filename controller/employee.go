@@ -256,6 +256,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			return
 		}
 		team.FetchRepositoriesID(dao.DB)
+		user.FetchTeams(dao.DB)
 		if errs := github.RemoveEmployeeFromTeam(&team, &user); errs != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusOK,

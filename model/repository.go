@@ -89,21 +89,20 @@ func (r *Repository) IsOutsideCollaborator(db *gorm.DB, userID uint64) (bool, er
 }
 
 // IsIndividualCollaborator 是不是只在一个 Team 的开发者
-func (r *Repository) IsIndividualCollaborator(db *gorm.DB, userID uint64) (bool, error) {
+func (r *Repository) IsIndividualCollaborator(db *gorm.DB, user *User) (bool, error) {
 	teams, err := r.GetTeams(db)
 	if err != nil {
 		return false, err
 	}
-	individual, err := GetIndividualFromTeams(db, teams)
-	if err != nil {
-		return false, err
-	}
-	for i := 0; i < len(individual); i++ {
-		if individual[i] == userID {
-			return true, nil
+	var count int
+	for i := 0; i < len(teams); i++ {
+		for j := 0; j < len(user.TeamsID); j++ {
+			if teams[i] == user.TeamsID[j] {
+				count++
+			}
 		}
 	}
-	return false, nil
+	return count < 2, nil
 }
 
 // GetTeams ..

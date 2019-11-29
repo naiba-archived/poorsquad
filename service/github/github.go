@@ -301,14 +301,14 @@ func AddEmployeeToTeam(team *model.Team, user *model.User, permission uint64) []
 // RemoveEmployeeFromTeam ..
 func RemoveEmployeeFromTeam(team *model.Team, user *model.User) []error {
 	var errors []error
+
 	// 挨个仓库删除 Collaborator
 	if len(team.RepositoriesID) > 0 {
 		var repos []model.Repository
-		if err := dao.DB.Where("id in (?)", team.RepositoriesID).Error; err != nil {
+		if err := dao.DB.Where("id in (?)", team.RepositoriesID).Find(&repos).Error; err != nil {
 			errors = append(errors, err)
 			return errors
 		}
-
 		ctx := context.Background()
 		for i := 0; i < len(repos); i++ {
 			var account model.Account
@@ -349,7 +349,7 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 
 // RemoveEmployeeFromRepository ..
 func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
-	if ok, err := repository.IsOutsideCollaborator(dao.DB, user.ID); err != nil || !ok {
+	if ok, err := repository.IsIndividualCollaborator(dao.DB, user); err != nil || !ok {
 		return fmt.Errorf("用户「%s」在其他小组中还具有访问权限", user.Login)
 	}
 	var ur model.UserRepository
@@ -365,5 +365,5 @@ func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client,
 			return err
 		}
 	}
-	return nil
+	return RepositorySync(ctx, client, account, repository)
 }

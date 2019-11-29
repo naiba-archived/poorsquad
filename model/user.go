@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v28/github"
+	"github.com/jinzhu/gorm"
 	"github.com/naiba/com"
 )
 
@@ -22,6 +23,8 @@ type User struct {
 	Token        string    `gorm:"UNIQUE_INDEX" json:"-"`   // 认证 Token
 	TokenExpired time.Time `json:"token_expired,omitempty"` // Token 过期时间
 	SuperAdmin   bool      `json:"super_admin,omitempty"`   // 超级管理员
+
+	TeamsID []uint64 `gorm:"-"`
 }
 
 // NewUserFromGitHub ..
@@ -47,4 +50,13 @@ func NewUserFromGitHub(gu *github.User) User {
 func (u *User) IssueNewToken() {
 	u.Token = com.MD5(fmt.Sprintf("%d%d%s", time.Now().UnixNano(), u.ID, u.Login))
 	u.TokenExpired = time.Now().AddDate(0, 0, 14)
+}
+
+// FetchTeams ..
+func (u *User) FetchTeams(db *gorm.DB) {
+	var uts []UserTeam
+	db.Where("user_id = ?", u.ID).Find(&uts)
+	for i := 0; i < len(uts); i++ {
+		u.TeamsID = append(u.TeamsID, uts[i].TeamID)
+	}
 }
