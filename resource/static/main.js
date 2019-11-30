@@ -95,7 +95,7 @@ function addEmployee(type, id) {
     $('#employeeForm .dropdown .item:nth-child(3)').css('display', 'block')
     $('#employeeForm input[name=id]').val(id)
     $('#employeeForm input[name=type]').val(type)
-    $('#employeeForm .dropdown').dropdown('set selected', 1)
+    $('#employeeForm .dropdown').dropdown('restore default value')
     if (type === 'repository') {
         $('#employeeForm .dropdown').parent().css('display', 'none')
     } else if (type === 'team') {
