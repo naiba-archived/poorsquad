@@ -21,7 +21,70 @@ type TeamController struct {
 func ServeTeam(r gin.IRoutes) {
 	tc := TeamController{}
 	r.POST("/team", tc.addOrEdit)
+	r.DELETE("/team/:id", tc.remove)
 	r.POST("/team/repositories", tc.bindRepositories)
+}
+
+func (tc *TeamController) remove(c *gin.Context) {
+	teamID := c.Param("id")
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var team model.Team
+	if err := dao.DB.Where("id = ?", teamID).First(&team).Error; err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+	// 验证管理权限
+	var comp model.Company
+	comp.ID = team.CompanyID
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+	team.FetchRepositoriesID(dao.DB)
+	team.FetchRepositories(dao.DB)
+	ctx := context.Background()
+	// 挨个仓库清理雇员权限并删除团队绑定
+	for i := 0; i < len(team.Repositories); i++ {
+		team.Repositories[i].GetAccount(dao.DB)
+		client := github.NewAPIClient(ctx, team.Repositories[i].Account.Token)
+		github.RemoveRepositoryFromTeam(ctx, client, &team.Repositories[i].Account, &team, &team.Repositories[i])
+		if err := dao.DB.Delete(&model.TeamRepository{
+			TeamID:       team.ID,
+			RepositoryID: team.Repositories[i].ID,
+		}).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+	}
+	// 删除用户团队绑定
+	if err := dao.DB.Delete(&model.UserTeam{
+		TeamID: team.ID,
+	}).Error; err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+	if err := dao.DB.Delete(&team).Error; err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
 }
 
 type teamForm struct {
@@ -43,7 +106,7 @@ func (tc *TeamController) addOrEdit(c *gin.Context) {
 	// 验证管理权限
 	var comp model.Company
 	comp.ID = tf.CompanyID
-	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPMember); err != nil {
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
@@ -97,7 +160,7 @@ func (tc *TeamController) bindRepositories(c *gin.Context) {
 	// 权限验证
 	var company model.Company
 	company.ID = t.CompanyID
-	_, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
+	_, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
@@ -203,7 +266,7 @@ CHECKADD:
 		ctx := context.Background()
 		client := GitHubService.NewAPIClient(ctx, account.Token)
 		// GitHub 同步
-		if errs := github.AddRepositoryFromTeam(ctx, client, &account, &t, &repo); errs != nil {
+		if errs := github.AddRepositoryToTeam(ctx, client, &account, &t, &repo); errs != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusInternalServerError,
 				Message: fmt.Sprintf("GitHub同步错误：%s", errs),

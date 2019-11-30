@@ -100,8 +100,8 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 	var respData interface{}
 	// 验证管理权限
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-	companyPerm, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
-	teamPerm, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
+	companyPerm, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	teamPerm, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPManager)
 	switch ef.Type {
 	case "company":
 		if errCompanyAdmin != nil {
@@ -132,7 +132,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-		if companyPerm < model.UCPManager && (teamPerm <= ef.Permission || teamPerm < model.UTPManager) {
+		if errCompanyAdmin != nil && teamPerm <= ef.Permission {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", "授权不能高于您自身权限"),
@@ -152,13 +152,6 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", "权限不足"),
-			})
-			return
-		}
-		if companyPerm < model.UCPManager && teamPerm < model.UTPManager {
-			c.JSON(http.StatusOK, model.Response{
-				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("访问受限：%s", "您没有权限添加外部雇员"),
 			})
 			return
 		}
@@ -241,8 +234,8 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 	var respData interface{}
 	// 验证管理权限
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-	_, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember)
-	_, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPMember)
+	_, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	myTeamPerm, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPManager)
 	switch what {
 	case "teamEmployee":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
@@ -252,11 +245,11 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
-		_, errUserTeamAdmin := team.CheckUserPermission(dao.DB, user.ID, model.UTPMember)
-		if errCompanyAdmin != nil && errUserTeamAdmin == nil {
+		userPerm, err := team.CheckUserPermission(dao.DB, user.ID, 0)
+		if errCompanyAdmin != nil && (err != nil || myTeamPerm < userPerm) {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("访问受限：%s", "只能企业管理员移出组长"),
+				Message: fmt.Sprintf("访问受限：%s", "权限不足"),
 			})
 			return
 		}

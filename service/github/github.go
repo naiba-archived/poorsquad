@@ -279,8 +279,8 @@ func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, acc
 	return errors
 }
 
-// AddRepositoryFromTeam ..
-func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) []error {
+// AddRepositoryToTeam ..
+func AddRepositoryToTeam(ctx context.Context, client *GitHubAPI.Client, account *model.Account, team *model.Team, repository *model.Repository) []error {
 	var errors []error
 	teams, err := repository.GetTeams(dao.DB)
 	if err != nil {
@@ -347,7 +347,6 @@ func AddEmployeeToTeam(team *model.Team, user *model.User, permission uint64) []
 // RemoveEmployeeFromTeam ..
 func RemoveEmployeeFromTeam(team *model.Team, user *model.User) []error {
 	var errors []error
-
 	// 挨个仓库删除 Collaborator
 	if len(team.RepositoriesID) > 0 {
 		var repos []model.Repository
@@ -370,14 +369,12 @@ func RemoveEmployeeFromTeam(team *model.Team, user *model.User) []error {
 			RepositorySync(ctx, client, &account, &repos[i])
 		}
 	}
-
 	if err := dao.DB.Delete(&model.UserTeam{
 		UserID: user.ID,
 		TeamID: team.ID,
 	}).Error; err != nil {
 		errors = append(errors, err)
 	}
-
 	return errors
 }
 

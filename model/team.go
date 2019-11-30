@@ -21,13 +21,13 @@ type Team struct {
 }
 
 // CheckUserPermission ..
-func (t *Team) CheckUserPermission(db *gorm.DB, userID uint64, permission uint64) (uint64, error) {
+func (t *Team) CheckUserPermission(db *gorm.DB, userID uint64, minPermission uint64) (uint64, error) {
 	var ut UserTeam
-	if err := db.Where("team_id = ? AND user_id = ? AND permission > ?", t.ID, userID, permission).First(&ut).Error; err != nil {
+	if err := db.Where("team_id = ? AND user_id = ?", t.ID, userID).First(&ut).Error; err != nil {
 		return 0, fmt.Errorf("您不是该小组的雇员(%s)", err)
 	}
-	if permission > 0 && ut.Permission < permission {
-		return 0, fmt.Errorf("您不是该小组的管理人员(%d)", ut.Permission)
+	if minPermission > 0 && ut.Permission < minPermission {
+		return 0, fmt.Errorf("权限不足(%d < %d)", ut.Permission, minPermission)
 	}
 	return ut.Permission, nil
 }

@@ -42,7 +42,7 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	if cf.ID != 0 {
 		// 验证管理权限
 		company.ID = cf.ID
-		if _, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPMember); err != nil {
+		if _, err := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: err.Error(),

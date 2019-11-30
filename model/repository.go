@@ -20,6 +20,7 @@ type Repository struct {
 	AccountID uint64
 
 	OutsideCollaborators []User
+	Account              Account
 }
 
 // NewRepositoryFromGitHub ..
@@ -117,4 +118,9 @@ func (r *Repository) GetTeams(db *gorm.DB) ([]uint64, error) {
 		teamIDs = append(teamIDs, teamRepositories[i].TeamID)
 	}
 	return teamIDs, nil
+}
+
+// GetAccount ..
+func (r *Repository) GetAccount(db *gorm.DB) {
+	db.Where("id = ?", r.AccountID).First(&r.Account)
 }

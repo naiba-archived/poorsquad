@@ -41,7 +41,7 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	// 验证管理权限
 	var comp model.Company
 	comp.ID = af.CompanyID
-	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPMember); err != nil {
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),

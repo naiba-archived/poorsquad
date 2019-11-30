@@ -99,6 +99,26 @@ function addEmployee(type, id) {
     showFormModal('.tiny.employee.modal', '#employeeForm', '/api/employee');
 }
 
+function removeTeam(id) {
+    $.ajax({
+        url: '/api/team/' + id,
+        type: 'DELETE',
+    }).done(resp => {
+        if (resp.code == 200) {
+            if (resp.message) {
+                alert(resp.message)
+            } else {
+                alert('移除成功')
+            }
+            window.location.reload()
+        } else {
+            alert('移除失败 ' + resp.code + '：' + resp.message)
+        }
+    }).fail(err => {
+        lert('网络错误：' + err.responseText)
+    });
+}
+
 function removeEmployee(data) {
     $.ajax({
         url: '/api/employee/' + data.type + '/' + data.id + '/' + data.userID,

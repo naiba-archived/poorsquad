@@ -101,7 +101,9 @@
                                             onclick="bindRepository({{$team.ID}},{{$team.RepositoriesID}})"><i
                                                 class="icon cubes"></i></button>
                                         <button class="ui button"><i class="icon edit"></i></button>
-                                        <button class="ui red button"><i class="icon delete"></i></button>
+                                        <button class="ui red button"
+                                            onclick="showConfirm('确认移除小组「'+{{$team.Name}}+'」？','将会把雇员移出小组下的所有仓库（雇员所属其他小组的仓库除外）',removeTeam,{{$team.ID}})"><i
+                                                class="icon delete"></i></button>
                                     </div>
                                 </div>
                                 <div class="meta">创建于 {{$team.CreatedAt|tf}}</div>
