@@ -384,7 +384,7 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 	ur.UserID = user.ID
 	ur.RepositoryID = repository.ID
 	if err := dao.DB.First(&ur).Error; err == nil {
-		return fmt.Errorf("用户「%s」已在仓库中", user.Login)
+		return fmt.Errorf("用户「%s」已在仓库「%s」中", user.Login, repository.Name)
 	}
 	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, user.Login, nil); err != nil {
 		return err

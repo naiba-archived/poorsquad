@@ -66,9 +66,7 @@ func (tc *TeamController) remove(c *gin.Context) {
 		}
 	}
 	// 删除用户团队绑定
-	if err := dao.DB.Delete(&model.UserTeam{
-		TeamID: team.ID,
-	}).Error; err != nil {
+	if err := dao.DB.Delete(model.UserTeam{}, "team_id = ?", team.ID).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusInternalServerError,
 			Message: fmt.Sprintf("数据库错误：%s", err),
