@@ -3,7 +3,7 @@ WORKDIR /poorsquad
 COPY . .
 RUN apk --no-cache --no-progress add --virtual build-deps build-base git linux-pam-dev \
     && go mod tidy -v \
-    && go build -mod=vendor -o dashboard -ldflags="-s -w" cmd/dashboard/main.go
+    && go build -o dashboard -ldflags="-s -w" cmd/dashboard/main.go
 FROM alpine:latest
 RUN apk --no-cache --no-progress add \
     ca-certificates \
