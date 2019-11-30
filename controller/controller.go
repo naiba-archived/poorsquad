@@ -72,6 +72,7 @@ func RunWeb() {
 			ServeAccount(memberAPI)
 			ServeEmployee(memberAPI)
 			ServeTeam(memberAPI)
+			ServeRepository(memberAPI)
 			memberAPI.POST("/logout", logout)
 		}
 	}

@@ -85,6 +85,10 @@ function addCompany() {
     showFormModal('.tiny.company.modal', '#companyForm', '/api/company');
 }
 
+function addRepository() {
+    showFormModal('.tiny.repository.modal', '#repositoryForm', '/api/repository');
+}
+
 function addEmployee(type, id) {
     $('#employeeForm .dropdown .item:nth-child(3)').css('display', 'block')
     $('#employeeForm .dropdown').parent().css('display', 'block')

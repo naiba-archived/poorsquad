@@ -154,10 +154,10 @@
                             <h2>仓库列表</h2>
                         </div>
                         <div class="right aligned column">
-                            <div class="ui vertical animated button" onclick="addAccount()">
-                                <div class="hidden content">绑定</div>
+                            <div class="ui vertical animated button" onclick="addRepository()">
+                                <div class="hidden content">创建</div>
                                 <div class="visible content">
-                                    <i class="plug icon"></i>
+                                    <i class="add icon"></i>
                                 </div>
                             </div>
                         </div>
@@ -217,6 +217,7 @@
 </div>
 {{template "component/bindRepository" .}}
 {{template "component/addTeam" .}}
+{{template "component/addRepository" .}}
 {{template "component/addAccount" .}}
 {{template "component/addEmployee" .}}
 {{template "common/footer" .}}

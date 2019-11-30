@@ -1,0 +1,45 @@
+{{define "component/addRepository"}}
+<div class="ui tiny repository modal transition hidden">
+    <div class="header">创建仓库</div>
+    <div class="content">
+        <form id="repositoryForm" class="ui form">
+            <input type="hidden" name="id">
+            <input type="hidden" name="type">
+            <div class="field">
+                <label>仓库名</label>
+                <input type="text" name="name" placeholder="awesome-project">
+            </div>
+            <div class="field">
+                <label>私有仓库</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" name="private">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">是</div>
+                    <div class="menu">
+                        <div class="item" data-value="on">是</div>
+                        <div class="item" data-value="off">否</div>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label>选择账号</label>
+                <div class="ui selection dropdown">
+                    <input type="hidden" name="account">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">{{if .Accounts}}{{(index .Accounts 0).Name}}{{end}}</div>
+                    <div class="menu">
+                        {{range .Accounts}}
+                        <div class="item" data-value="{{.ID}}">{{.Name}}</div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">创建<i class="add icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}

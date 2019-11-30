@@ -17,7 +17,7 @@ const (
 // Account ..
 type Account struct {
 	Common    `json:"common,omitempty"`
-	Login     string `json:"login,omitempty"`
+	Login     string `gorm:"UNIQUE_INDEX" json:"login,omitempty"`
 	Name      string `json:"name,omitempty"` // 昵称
 	AvatarURL string `json:"avatar_url,omitempty"`
 
