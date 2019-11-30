@@ -14,8 +14,10 @@ type Team struct {
 	CompanyID uint64 `json:"company_id,omitempty"`
 
 	RepositoriesID []uint64 `gorm:"-"`
-	Managers       []User
+	Repositories   []Repository
+	EmployeesID    []uint64 `gorm:"-"`
 	Employees      []User
+	Managers       []User
 }
 
 // CheckUserPermission ..
@@ -39,17 +41,21 @@ func (t *Team) FetchRepositoriesID(db *gorm.DB) {
 	}
 }
 
-// FetchEmployees ..
-func (t *Team) FetchEmployees(db *gorm.DB) {
+// FetchRepositories ..
+func (t *Team) FetchRepositories(db *gorm.DB) {
+	db.Where("id IN (?)", t.RepositoriesID).Find(&t.Repositories)
+}
+
+// FetchEmployeesID ..
+func (t *Team) FetchEmployeesID(db *gorm.DB) {
 	var uts []UserTeam
 	db.Where("team_id = ?", t.ID).Find(&uts)
 	for i := 0; i < len(uts); i++ {
-		var u User
-		u.ID = uts[i].UserID
-		if uts[i].Permission == UTPManager {
-			t.Managers = append(t.Managers, u)
-		} else {
-			t.Employees = append(t.Employees, u)
-		}
+		t.EmployeesID = append(t.EmployeesID, uts[i].UserID)
 	}
+}
+
+// FetchEmployees ..
+func (t *Team) FetchEmployees(db *gorm.DB) {
+	db.Where("id IN (?)", t.EmployeesID).Find(&t.Employees)
 }

@@ -76,6 +76,7 @@ func company(c *gin.Context) {
 	dao.DB.Where("company_id = ? ", compID).Find(&teams)
 	for i := 0; i < len(teams); i++ {
 		teams[i].FetchRepositoriesID(dao.DB)
+		teams[i].FetchEmployeesID(dao.DB)
 		teams[i].FetchEmployees(dao.DB)
 		for j := 0; j < len(teams[i].Managers); j++ {
 			user, _ := dao.GetUserByID(teams[i].Managers[j].ID)

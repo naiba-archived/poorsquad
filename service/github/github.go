@@ -26,17 +26,57 @@ func NewAPIClient(ctx context.Context, token string) *GitHubAPI.Client {
 // SyncAll ..
 func SyncAll() {
 	var accounts []model.Account
+	accountIndex := make(map[uint64]*model.Account)
 	dao.DB.Find(&accounts)
 	for i := 0; i < len(accounts); i++ {
 		account := accounts[i]
+		accountIndex[account.ID] = &account
 		if account.SyncedAt.Add(time.Hour * 10).After(time.Now()) {
 			continue
 		}
 		account.SyncedAt = time.Now()
 		dao.DB.Save(&account)
 		ctx := context.Background()
-		go AccountSync(ctx, NewAPIClient(ctx, account.Token), &account)
+		AccountSync(ctx, NewAPIClient(ctx, account.Token), &account)
 	}
+	var teams []model.Team
+	dao.DB.Find(&teams)
+	for i := 0; i < len(teams); i++ {
+		TeamSync(&teams[i], accountIndex)
+	}
+}
+
+// TeamSync ..
+func TeamSync(team *model.Team, accountIndex map[uint64]*model.Account) []error {
+	var errs []error
+	team.FetchEmployeesID(dao.DB)
+	team.FetchEmployees(dao.DB)
+	team.FetchRepositoriesID(dao.DB)
+	team.FetchRepositories(dao.DB)
+	for i := 0; i < len(team.Repositories); i++ {
+		var userRepos []model.UserRepository
+		dao.DB.Where("repository_id = ?", team.Repositories[i].ID).Find(&userRepos)
+		// GitHub 账户
+		account := accountIndex[team.Repositories[i].AccountID]
+		// 缺失的小组成员的添加
+		ctx := context.Background()
+		client := NewAPIClient(ctx, account.Token)
+		var changed int
+	TOADD:
+		for j := 0; j < len(team.Employees); j++ {
+			for k := 0; k < len(userRepos); k++ {
+				if team.Employees[j].ID == userRepos[k].UserID {
+					continue TOADD
+				}
+			}
+			AddEmployeeToRepository(ctx, client, account, &team.Repositories[i], &team.Employees[j])
+			changed++
+		}
+		if changed > 0 {
+			RepositorySync(ctx, client, account, &team.Repositories[i])
+		}
+	}
+	return errs
 }
 
 // AccountSync ..
@@ -234,6 +274,8 @@ func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, acc
 			errors = append(errors, err)
 		}
 	}
+	// 同步仓库用户
+	RepositorySync(ctx, client, account, repository)
 	return errors
 }
 
@@ -261,6 +303,8 @@ func AddRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, accoun
 			errors = append(errors, err)
 		}
 	}
+	// 同步仓库用户
+	RepositorySync(ctx, client, account, repository)
 	return errors
 }
 
@@ -286,6 +330,8 @@ func AddEmployeeToTeam(team *model.Team, user *model.User, permission uint64) []
 		if err := AddEmployeeToRepository(ctx, client, &account, &repositories[i], user); err != nil {
 			errors = append(errors, err)
 		}
+		// 同步仓库用户
+		RepositorySync(ctx, client, &account, &repositories[i])
 	}
 
 	var userTeam model.UserTeam
@@ -320,6 +366,8 @@ func RemoveEmployeeFromTeam(team *model.Team, user *model.User) []error {
 			if err := RemoveEmployeeFromRepository(ctx, client, &account, &repos[i], user); err != nil {
 				errors = append(errors, err)
 			}
+			// 同步仓库用户
+			RepositorySync(ctx, client, &account, &repos[i])
 		}
 	}
 
@@ -344,7 +392,7 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 	if _, err := client.Repositories.AddCollaborator(ctx, account.Login, repository.Name, user.Login, nil); err != nil {
 		return err
 	}
-	return RepositorySync(ctx, client, account, repository)
+	return nil
 }
 
 // RemoveEmployeeFromRepository ..
@@ -365,5 +413,5 @@ func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client,
 			return err
 		}
 	}
-	return RepositorySync(ctx, client, account, repository)
+	return nil
 }

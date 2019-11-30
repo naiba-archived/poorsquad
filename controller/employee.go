@@ -168,6 +168,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
+		github.RepositorySync(ctx, client, &account, &repository)
 		respData = user
 	}
 
@@ -283,16 +284,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
-		if err := dao.DB.Delete(&model.UserRepository{
-			UserID:       user.ID,
-			RepositoryID: repository.ID,
-		}).Error; err != nil {
-			c.JSON(http.StatusOK, model.Response{
-				Code:    http.StatusBadRequest,
-				Message: fmt.Sprintf("GitHub 同步：%s", err),
-			})
-			return
-		}
+		github.RepositorySync(ctx, client, &account, &repository)
 		respData = user.Login
 	}
 
