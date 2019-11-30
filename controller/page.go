@@ -21,6 +21,13 @@ func home(c *gin.Context) {
 	var companies []model.Company
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 	dao.DB.Table("companies").Joins("INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ?)", u.ID).Find(&companies)
+	var compsID []uint64
+	for i := 0; i < len(companies); i++ {
+		compsID = append(compsID, companies[i].ID)
+	}
+	var companies1 []model.Company
+	dao.DB.Table("companies").Joins("INNER JOIN user_teams,teams ON (companies.id = teams.company_id AND teams.id = user_teams.team_id AND user_teams.user_id = ? AND companies.id NOT IN (?))", u.ID, compsID).Find(&companies1)
+	companies = append(companies, companies1...)
 	for i := 0; i < len(companies); i++ {
 		// 管理员列表
 		dao.FetchCompanyManagers(&companies[i])
