@@ -14,7 +14,7 @@
                 <div class="ui selection dropdown">
                     <input type="hidden" name="private">
                     <i class="dropdown icon"></i>
-                    <div class="default text">是</div>
+                    <div class="default text">请选择</div>
                     <div class="menu">
                         <div class="item" data-value="on">是</div>
                         <div class="item" data-value="off">否</div>
@@ -26,7 +26,7 @@
                 <div class="ui selection dropdown">
                     <input type="hidden" name="account">
                     <i class="dropdown icon"></i>
-                    <div class="default text">{{if .Accounts}}{{(index .Accounts 0).Name}}{{end}}</div>
+                    <div class="default text">请选择</div>
                     <div class="menu">
                         {{range .Accounts}}
                         <div class="item" data-value="{{.ID}}">{{.Name}}</div>

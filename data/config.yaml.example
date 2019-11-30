@@ -1,0 +1,7 @@
+Debug: true
+Site:
+  Brand: PoorSquad #系统名
+  CookieName: i_love_github #浏览器端Cookie名
+GitHub: #GitHub Oauth 配置
+  ClientID: exampled66549e2caaa
+  ClientSecret: example3556116cfb1b76ba71ecdd6b727281b6

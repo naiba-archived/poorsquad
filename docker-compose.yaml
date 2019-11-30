@@ -1,0 +1,10 @@
+version: '3.3'
+
+services:
+   dashboard:
+     image: docker.pkg.github.com/naiba/dockerfiles/poorsquad:latest
+     volumes:
+       - ./data/:/poorsquad/data
+     restart: always
+     ports:
+       - "172.17.0.1:8001:8080"
