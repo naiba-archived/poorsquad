@@ -26,6 +26,20 @@ func Init(dbp *gorm.DB, cp *cache.Cache, cf *model.Config) {
 	Conf = cf
 }
 
+// FetchCompanyManagers ..
+func FetchCompanyManagers(company *model.Company) {
+	var userCompanies []model.UserCompany
+	DB.Where("company_id = ?", company.ID).Find(&userCompanies)
+	for i := 0; i < len(userCompanies); i++ {
+		user, _ := GetUserByID(userCompanies[i].UserID)
+		if userCompanies[i].Permission == model.UCPManager {
+			company.Managers = append(company.Managers, user)
+		} else {
+			company.SuperManagers = append(company.SuperManagers, user)
+		}
+	}
+}
+
 // GetUserByID ..
 func GetUserByID(id uint64) (user model.User, err error) {
 	key := fmt.Sprintf("user%d", id)

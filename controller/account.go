@@ -73,7 +73,6 @@ func (ac *AccountController) addOrEdit(c *gin.Context) {
 	go GitHubService.AccountSync(ctx, client, &a)
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: a,
+		Code: http.StatusOK,
 	})
 }

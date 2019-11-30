@@ -21,6 +21,10 @@ func home(c *gin.Context) {
 	var companies []model.Company
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 	dao.DB.Table("companies").Joins("INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ?)", u.ID).Find(&companies)
+	for i := 0; i < len(companies); i++ {
+		// 管理员列表
+		dao.FetchCompanyManagers(&companies[i])
+	}
 	c.HTML(http.StatusOK, "page/home", commonEnvironment(c, gin.H{
 		"Companies": companies,
 	}))
@@ -87,6 +91,9 @@ func company(c *gin.Context) {
 			teams[i].Employees[j] = user
 		}
 	}
+
+	// 管理员列表
+	dao.FetchCompanyManagers(&comp)
 
 	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{
 		"Title":        comp.Brand + "- 企业",

@@ -15,9 +15,41 @@
                             <span class="date">{{.Company.CreatedAt|tf}}加入</span>
                         </div>
                         <div class="description">
-                            <p>共有小组：{{.Company.TeamCount}} 组</p>
-                            <p>共有项目：{{.Company.ProjectCount}} 个</p>
-                            <p>共有雇员：{{.Company.EmployeeCount}} 位</p>
+                            <div class="description avatar-list">
+                                {{if .Company.SuperManagers}}
+                                <div class="ui horizontal divider">超管</div>
+                                {{range .Company.SuperManagers}}
+                                <p class="ui inline mini fade reveal circular rotate image">
+                                    <img class="visible content" src="{{.AvatarURL}}">
+                                    <button class="hidden content circular ui red icon button" onclick="alert('bingo')">
+                                        <i class="icon delete"></i>
+                                    </button>
+                                </p>
+                                {{end}}
+                                <p class="ui inline mini circular rotate image">
+                                    <button class="circular ui primary icon button"
+                                        onclick="addEmployee('team',{{$.Company.ID}})">
+                                        <i class="icon add"></i>
+                                    </button>
+                                </p>
+                                {{end}}
+                                <div class="ui horizontal divider">管理员</div>
+                                {{range .Company.Managers}}
+                                <p class="ui inline mini fade reveal circular rotate image">
+                                    <img class="visible content" src="{{.AvatarURL}}">
+                                    <button class="hidden content circular ui red icon button"
+                                        onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出小组下的所有仓库（雇员所属其他小组的仓库除外）',removeEmployee,{type:'teamEmployee',id:'{{$.Company.ID}}',userID:'{{.ID}}'})">
+                                        <i class="icon delete"></i>
+                                    </button>
+                                </p>
+                                {{end}}
+                                <p class="ui inline mini circular rotate image">
+                                    <button class="circular ui primary icon button"
+                                        onclick="addEmployee('team',{{$.Company.ID}})">
+                                        <i class="icon add"></i>
+                                    </button>
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="extra content">

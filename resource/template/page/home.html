@@ -48,9 +48,6 @@
                                 <th>企业</th>
                                 <th>超管</th>
                                 <th>管理员</th>
-                                <th>小组</th>
-                                <th>项目</th>
-                                <th>雇员</th>
                                 <th>管理操作</th>
                             </tr>
                         </thead>
@@ -63,23 +60,18 @@
                                 <td>
                                     {{.Brand}}
                                 </td>
-                                <td>
-                                    奶爸
+                                <td class="avatar-list">
+                                    {{range .SuperManagers}}
+                                    <img class="ui avatar image" src="{{.AvatarURL}}">
+                                    {{end}}
+                                </td>
+                                <td class="avatar-list">
+                                    {{range .Managers}}
+                                    <img class="ui avatar image" src="{{.AvatarURL}}">
+                                    {{end}}
                                 </td>
                                 <td>
-                                    胡歌、霍建华、马云、马化腾
-                                </td>
-                                <td>
-                                    {{.TeamCount}}组
-                                </td>
-                                <td>
-                                    {{.ProjectCount}}个
-                                </td>
-                                <td>
-                                    {{.EmployeeCount}}位
-                                </td>
-                                <td>
-                                    <div class="ui icon buttons">
+                                    <div class=" ui icon buttons">
                                         <a class="primary ui mini button" href="/company/{{.ID}}"><i
                                                 class="icon building outline"></i></a>
                                         <button class="ui mini button"><i class="icon edit"></i></button>

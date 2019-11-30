@@ -97,7 +97,6 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 		return
 	}
 
-	var respData interface{}
 	// 验证管理权限
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 	companyPerm, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
@@ -123,7 +122,6 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 		userCompany.UserID = user.ID
 		userCompany.Permission = ef.Permission
 		err = dao.DB.Save(&userCompany).Error
-		respData = userCompany
 	case "team":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
@@ -146,7 +144,6 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-		respData = user.Login
 	case "repository":
 		if errTeamAdmin != nil && errCompanyAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
@@ -166,12 +163,10 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			return
 		}
 		github.RepositorySync(ctx, client, &account, &repository)
-		respData = user
 	}
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: respData,
+		Code: http.StatusOK,
 	})
 }
 
@@ -231,7 +226,6 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 		return
 	}
 
-	var respData interface{}
 	// 验证管理权限
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 	_, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
@@ -262,7 +256,6 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
-		respData = user.ID
 
 	case "repositoryOutsideCollaborator":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
@@ -282,11 +275,9 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			return
 		}
 		github.RepositorySync(ctx, client, &account, &repository)
-		respData = user.Login
 	}
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: respData,
+		Code: http.StatusOK,
 	})
 }

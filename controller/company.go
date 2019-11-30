@@ -78,7 +78,6 @@ func (cc *CompanyController) addOrEdit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: company,
+		Code: http.StatusOK,
 	})
 }

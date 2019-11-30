@@ -124,8 +124,7 @@ func (tc *TeamController) addOrEdit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: t,
+		Code: http.StatusOK,
 	})
 }
 
@@ -284,7 +283,6 @@ CHECKADD:
 	}
 
 	c.JSON(http.StatusOK, model.Response{
-		Code:   http.StatusOK,
-		Result: trr.Repositories,
+		Code: http.StatusOK,
 	})
 }

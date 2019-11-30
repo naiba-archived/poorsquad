@@ -9,12 +9,11 @@ import (
 // Company ...
 type Company struct {
 	Common
-	Brand     string `json:"brand,omitempty"`
-	AvatarURL string `json:"avatar_url,omitempty"`
+	Brand     string
+	AvatarURL string
 
-	ProjectCount  uint64 `json:"project_count,omitempty"`
-	EmployeeCount uint64 `json:"employee_count,omitempty"`
-	TeamCount     uint64 `json:"team_count,omitempty"`
+	Managers      []User
+	SuperManagers []User
 }
 
 // CheckUserPermission ..
