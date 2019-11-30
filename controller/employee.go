@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -83,12 +84,15 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 
 	if err == nil {
 		err = dao.DB.Where("login = ?", ef.Username).First(&user).Error
+		if err != nil {
+			err = errors.New("为防止滥用，只允许主动登录过系统的用户被添加")
+		}
 	}
 
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
-			Message: fmt.Sprintf("数据库错误：%s", err),
+			Message: fmt.Sprintf("出现错误：%s", err),
 		})
 		return
 	}
