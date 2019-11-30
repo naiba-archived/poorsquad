@@ -20,14 +20,8 @@ func login(c *gin.Context) {
 func home(c *gin.Context) {
 	var companies []model.Company
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-	dao.DB.Table("companies").Joins("INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ?)", u.ID).Find(&companies)
-	var compsID []uint64
-	for i := 0; i < len(companies); i++ {
-		compsID = append(compsID, companies[i].ID)
-	}
-	var companies1 []model.Company
-	dao.DB.Table("companies").Joins("INNER JOIN user_teams,teams ON (companies.id = teams.company_id AND teams.id = user_teams.team_id AND user_teams.user_id = ? AND companies.id NOT IN (?))", u.ID, compsID).Find(&companies1)
-	companies = append(companies, companies1...)
+	dao.DB.Raw(`SELECT "companies".* FROM "companies" INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ?) WHERE "companies"."deleted_at" IS NULL
+	UNION SELECT "companies".* FROM "companies" INNER JOIN user_teams,teams ON (companies.id = teams.company_id AND teams.id = user_teams.team_id AND user_teams.user_id = ?) WHERE "companies"."deleted_at" IS NULL`, u.ID, u.ID).Scan(&companies)
 	for i := 0; i < len(companies); i++ {
 		// 管理员列表
 		dao.FetchCompanyManagers(&companies[i])
@@ -41,7 +35,8 @@ func company(c *gin.Context) {
 	compID := c.Param("id")
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 	var comp model.Company
-	if err := dao.DB.Table("companies").Joins("INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ? AND user_companies.company_id = ?)", u.ID, compID).First(&comp).Error; err != nil {
+	if err := dao.DB.Raw(`SELECT "companies".* FROM "companies" INNER JOIN user_companies ON (companies.id = user_companies.company_id AND user_companies.user_id = ?) WHERE "companies"."deleted_at" IS NULL AND companies.id = ?
+	UNION SELECT "companies".* FROM "companies" INNER JOIN user_teams,teams ON (companies.id = teams.company_id AND teams.id = user_teams.team_id AND user_teams.user_id = ?) WHERE "companies"."deleted_at" IS NULL AND companies.id = ?`, u.ID, compID, u.ID, compID).Scan(&comp).Error; err != nil {
 		showErrorPage(c, errInfo{
 			Code:  http.StatusForbidden,
 			Title: "访问受限",

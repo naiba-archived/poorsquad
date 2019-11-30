@@ -29,10 +29,9 @@ type employeeForm struct {
 	Type       string `binding:"required" json:"type,omitempty"`
 	ID         uint64 `binding:"required,min=1" json:"id,omitempty"`
 	Username   string `binding:"required" json:"username,omitempty"`
-	Permission uint64 `json:"permission,omitempty"`
+	Permission uint64 `binding:"required,min=1" json:"permission,omitempty"`
 }
 
-//TODO: 雇员增减跟 GitHub 互通
 func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 	var ef employeeForm
 	if err := c.ShouldBindJSON(&ef); err != nil {
@@ -53,6 +52,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 
 	switch ef.Type {
 	case "company":
+		ef.Permission--
 		err = dao.DB.Where("id = ?", ef.ID).First(&company).Error
 	case "team":
 		err = dao.DB.Where("id = ?", ef.ID).First(&team).Error
@@ -80,6 +80,10 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			Message: fmt.Sprintf("错误：%s", "不支持的操作"),
 		})
 		return
+	}
+
+	if ef.Permission < 1 {
+		err = fmt.Errorf("没有这个权限：%d", ef.Permission)
 	}
 
 	if err == nil {
@@ -110,7 +114,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 			})
 			return
 		}
-		if companyPerm <= ef.Permission {
+		if companyPerm <= ef.Permission && companyPerm < model.UCPSuperManager {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
 				Message: fmt.Sprintf("访问受限：%s", "您只能授予低于自身的权限"),
@@ -184,14 +188,14 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 	var err error
 
 	switch what {
-	case "companySuperManager", "companyManager":
+	case "company":
 		err = dao.DB.Where("id = ?", id).First(&company).Error
-	case "teamManager", "teamEmployee":
+	case "team":
 		err = dao.DB.Where("id = ?", id).First(&team).Error
 		if err == nil {
 			err = dao.DB.Where("id = ?", team.CompanyID).First(&company).Error
 		}
-	case "repositoryOutsideCollaborator":
+	case "repository":
 		err = dao.DB.Where("id = ?", id).First(&repository).Error
 		if err == nil {
 			var teamRepositories []model.TeamRepository
@@ -228,10 +232,26 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 
 	// 验证管理权限
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
-	_, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	myCompPerm, errCompanyAdmin := company.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
 	myTeamPerm, errTeamAdmin := team.CheckUserPermission(dao.DB, u.ID, model.UTPManager)
 	switch what {
-	case "teamEmployee":
+	case "company":
+		userPerm, err := company.CheckUserPermission(dao.DB, user.ID, 0)
+		if errCompanyAdmin != nil || (err != nil || (userPerm >= myCompPerm && myCompPerm != model.UCPSuperManager)) {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("访问受限：%s", "权限不足"),
+			})
+			return
+		}
+		if err := dao.DB.Delete(&model.UserCompany{}, "user_id = ? AND company_id = ?", user.ID, company.ID).Error; err != nil {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("数据库错误：%s", err),
+			})
+			return
+		}
+	case "team":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,
@@ -257,7 +277,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			return
 		}
 
-	case "repositoryOutsideCollaborator":
+	case "repository":
 		if errCompanyAdmin != nil && errTeamAdmin != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusBadRequest,

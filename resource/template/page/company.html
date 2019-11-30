@@ -21,14 +21,15 @@
                                 {{range .Company.SuperManagers}}
                                 <p class="ui inline mini fade reveal circular rotate image">
                                     <img class="visible content" src="{{.AvatarURL}}">
-                                    <button class="hidden content circular ui red icon button" onclick="alert('bingo')">
+                                    <button class="hidden content circular ui red icon button"
+                                        onclick="showConfirm('确认移出管理员「'+{{.Name}}+'」？','该操作不会同步移出雇员所在小组',removeEmployee,{type:'company',id:'{{$.Company.ID}}',userID:'{{.ID}}'})">
                                         <i class="icon delete"></i>
                                     </button>
                                 </p>
                                 {{end}}
                                 <p class="ui inline mini circular rotate image">
                                     <button class="circular ui primary icon button"
-                                        onclick="addEmployee('team',{{$.Company.ID}})">
+                                        onclick="addEmployee('company',{{$.Company.ID}})">
                                         <i class="icon add"></i>
                                     </button>
                                 </p>
@@ -38,14 +39,14 @@
                                 <p class="ui inline mini fade reveal circular rotate image">
                                     <img class="visible content" src="{{.AvatarURL}}">
                                     <button class="hidden content circular ui red icon button"
-                                        onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出小组下的所有仓库（雇员所属其他小组的仓库除外）',removeEmployee,{type:'teamEmployee',id:'{{$.Company.ID}}',userID:'{{.ID}}'})">
+                                        onclick="showConfirm('确认移出管理员「'+{{.Name}}+'」？','该操作不会同步移出雇员所在小组',removeEmployee,{type:'company',id:'{{$.Company.ID}}',userID:'{{.ID}}'})">
                                         <i class="icon delete"></i>
                                     </button>
                                 </p>
                                 {{end}}
                                 <p class="ui inline mini circular rotate image">
                                     <button class="circular ui primary icon button"
-                                        onclick="addEmployee('team',{{$.Company.ID}})">
+                                        onclick="addEmployee('company',{{$.Company.ID}})">
                                         <i class="icon add"></i>
                                     </button>
                                 </p>
@@ -163,7 +164,7 @@
                                     <p class="ui inline mini fade reveal circular rotate image">
                                         <img class="visible content" src="{{.AvatarURL}}">
                                         <button class="hidden content circular ui red icon button"
-                                            onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出小组下的所有仓库（雇员所属其他小组的仓库除外）',removeEmployee,{type:'teamEmployee',id:'{{$team.ID}}',userID:'{{.ID}}'})">
+                                            onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出小组下的所有仓库（雇员所属其他小组的仓库除外）',removeEmployee,{type:'team',id:'{{$team.ID}}',userID:'{{.ID}}'})">
                                             <i class="icon delete"></i>
                                         </button>
                                     </p>
@@ -214,7 +215,7 @@
                                     <p class="ui inline mini fade reveal circular rotate image">
                                         <img class="visible content" src="{{.AvatarURL}}">
                                         <button
-                                            onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出次此仓库',removeEmployee,{type:'repositoryOutsideCollaborator',id:'{{$repo.ID}}',userID:'{{.ID}}'})"
+                                            onclick="showConfirm('确认移出雇员「'+{{.Name}}+'」？','将会把雇员移出次此仓库',removeEmployee,{type:'repository',id:'{{$repo.ID}}',userID:'{{.ID}}'})"
                                             class="hidden content circular ui red icon button">
                                             <i class="icon delete"></i>
                                         </button>

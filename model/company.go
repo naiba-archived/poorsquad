@@ -21,7 +21,7 @@ func (c *Company) CheckUserPermission(db *gorm.DB, userID, minPermission uint64)
 	// 验证雇员是否属于企业
 	var uc UserCompany
 	if err := db.Where("user_id = ? AND company_id = ?", userID, c.ID).First(&uc).Error; err != nil {
-		return 0, fmt.Errorf("您不是该企业的雇员(%s)", err)
+		return 0, fmt.Errorf("您不是该企业的管理员(%s)", err)
 	}
 	// 验证权限
 	if minPermission > 0 && uc.Permission < minPermission {
