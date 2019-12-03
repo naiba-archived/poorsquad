@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	GitHubAPI "github.com/google/go-github/v28/github"
+	"github.com/jinzhu/gorm"
 
 	"github.com/naiba/poorsquad/model"
 	"github.com/naiba/poorsquad/service/dao"
@@ -22,6 +23,7 @@ type RepositoryController struct {
 func ServeRepository(r gin.IRoutes) {
 	rc := RepositoryController{}
 	r.POST("/repository", rc.addOrEdit)
+	r.DELETE("/repository/:id", rc.delete)
 }
 
 type repositoryForm struct {
@@ -85,6 +87,54 @@ func (rc *RepositoryController) addOrEdit(c *gin.Context) {
 		})
 		return
 	}
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
+}
+
+func (rc *RepositoryController) delete(c *gin.Context) {
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+
+	// 验证管理权限
+	var repo model.Repository
+	var account model.Account
+	var comp model.Company
+	err := dao.DB.First(&repo, "id = ?", c.Param("id")).Error
+
+	if err == nil {
+		err = dao.DB.First(&account, "id = ?", repo.AccountID).Error
+	}
+
+	if err == nil {
+		comp.ID = account.CompanyID
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPSuperManager)
+	}
+
+	var tx *gorm.DB
+	if err == nil {
+		tx = dao.DB.Begin()
+		err = tx.Delete(model.UserRepository{}, "repository_id = ?", repo.ID).Error
+	}
+	if err == nil {
+		err = tx.Delete(repo).Error
+	}
+	if err == nil {
+		ctx := context.Background()
+		client := github.NewAPIClient(ctx, account.Token)
+		_, err = client.Repositories.Delete(ctx, account.Login, repo.Name)
+	}
+	if err != nil {
+		if tx != nil {
+			tx.Rollback()
+		}
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("出现错误：%s", err),
+		})
+		return
+	}
+	tx.Commit()
+
 	c.JSON(http.StatusOK, model.Response{
 		Code: http.StatusOK,
 	})
