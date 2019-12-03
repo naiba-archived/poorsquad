@@ -235,7 +235,7 @@
                                     <div class="ui icon buttons">
                                         <button class="ui mini button"><i class="icon sync"></i></button>
                                         <button class="red ui mini button"
-                                            onclick="showConfirm('确认注销？','注销后您必须重新登录才能使用',logout,1)"><i
+                                            onclick="showConfirm('确认删除仓库「'+{{$repo.Name}}+'」？','该操作不能撤销，该仓库所有东西将会消失。',removeRepository,{{$repo.ID}})"><i
                                                 class="icon delete"></i></button>
                                     </div>
                                 </td>

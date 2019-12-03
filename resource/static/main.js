@@ -1,15 +1,20 @@
 $('.ui.checkbox').checkbox();
 $('.ui.dropdown').dropdown();
 
+const confirmBtn = $('.mini.confirm.modal .positive.button')
 function showConfirm(title, content, callFn, extData) {
     const modal = $('.mini.confirm.modal')
     modal.children('.header').text(title)
     modal.children('.content').text(content)
+    if (confirmBtn.hasClass('loading')) {
+        return false
+    }
     modal.modal({
         closable: true,
         onApprove: function () {
+            confirmBtn.toggleClass('loading')
             callFn(extData)
-            return true
+            return false
         }
     }).modal('show')
 }
@@ -47,6 +52,27 @@ function showFormModal(modelSelector, formID, URL, getData) {
             return success
         }
     }).modal('show')
+}
+
+function deleteRequest(api) {
+    $.ajax({
+        url: api,
+        type: 'DELETE',
+    }).done(resp => {
+        if (resp.code == 200) {
+            if (resp.message) {
+                alert(resp.message)
+            } else {
+                alert('移除成功')
+            }
+            window.location.reload()
+        } else {
+            alert('移除失败 ' + resp.code + '：' + resp.message)
+            confirmBtn.toggleClass('loading')
+        }
+    }).fail(err => {
+        lert('网络错误：' + err.responseText)
+    });
 }
 
 function addTeam() {
@@ -107,43 +133,15 @@ function addEmployee(type, id) {
 }
 
 function removeTeam(id) {
-    $.ajax({
-        url: '/api/team/' + id,
-        type: 'DELETE',
-    }).done(resp => {
-        if (resp.code == 200) {
-            if (resp.message) {
-                alert(resp.message)
-            } else {
-                alert('移除成功')
-            }
-            window.location.reload()
-        } else {
-            alert('移除失败 ' + resp.code + '：' + resp.message)
-        }
-    }).fail(err => {
-        lert('网络错误：' + err.responseText)
-    });
+    deleteRequest('/api/team/' + id)
+}
+
+function removeRepository(id) {
+    deleteRequest('/api/repository/' + id)
 }
 
 function removeEmployee(data) {
-    $.ajax({
-        url: '/api/employee/' + data.type + '/' + data.id + '/' + data.userID,
-        type: 'DELETE',
-    }).done(resp => {
-        if (resp.code == 200) {
-            if (resp.message) {
-                alert(resp.message)
-            } else {
-                alert('移出成功')
-            }
-            window.location.reload()
-        } else {
-            alert('移出失败 ' + resp.code + '：' + resp.message)
-        }
-    }).fail(err => {
-        lert('网络错误：' + err.responseText)
-    });
+    deleteRequest('/api/employee/' + data.type + '/' + data.id + '/' + data.userID)
 }
 
 function logout(id) {
