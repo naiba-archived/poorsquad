@@ -29,7 +29,7 @@ type employeeForm struct {
 	Type       string `binding:"required" json:"type,omitempty"`
 	ID         uint64 `binding:"required,min=1" json:"id,omitempty"`
 	Username   string `binding:"required" json:"username,omitempty"`
-	Permission uint64 `binding:"required,min=1" json:"permission,omitempty"`
+	Permission uint64 `json:"permission,omitempty"`
 }
 
 func (ec *EmployeeController) addOrEdit(c *gin.Context) {
