@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/patrickmn/go-cache"
+	"github.com/robfig/cron/v3"
 
 	"github.com/naiba/poorsquad/controller"
 	"github.com/naiba/poorsquad/model"
@@ -34,5 +35,9 @@ func main() {
 
 	go controller.RunWeb()
 	go github.SyncAll()
+
+	c := cron.New()
+	c.AddFunc("@every 2h", github.SyncAll)
+	c.Start()
 	select {}
 }
