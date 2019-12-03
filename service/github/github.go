@@ -235,7 +235,7 @@ CHECKADD:
 		}
 		for j := 0; j < len(userRepos); j++ {
 			if userRepos[j].UserID == uint64(cos[k].GetID()) {
-				continue
+				continue CHECKADD
 			}
 		}
 		var ur model.UserRepository
