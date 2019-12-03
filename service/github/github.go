@@ -124,6 +124,7 @@ CHECKDEL:
 				continue CHECKDEL
 			}
 		}
+		dao.DB.Delete(model.UserRepository{}, "repository_id = ?", reposInDB[j].ID)
 		dao.DB.Delete(reposInDB[j])
 		reposInDB = append(reposInDB[:j], reposInDB[j+1:]...)
 	}

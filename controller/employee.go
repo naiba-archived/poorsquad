@@ -244,7 +244,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
-		if err := dao.DB.Delete(&model.UserCompany{}, "user_id = ? AND company_id = ?", user.ID, company.ID).Error; err != nil {
+		if err := dao.DB.Delete(model.UserCompany{}, "user_id = ? AND company_id = ?", user.ID, company.ID).Error; err != nil {
 			c.JSON(http.StatusOK, model.Response{
 				Code:    http.StatusInternalServerError,
 				Message: fmt.Sprintf("数据库错误：%s", err),
