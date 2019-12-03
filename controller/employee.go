@@ -82,7 +82,7 @@ func (ec *EmployeeController) addOrEdit(c *gin.Context) {
 		return
 	}
 
-	if ef.Permission < 1 {
+	if ef.Permission < 1 && ef.Type != "repository" {
 		err = fmt.Errorf("没有这个权限：%d", ef.Permission)
 	}
 
