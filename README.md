@@ -10,8 +10,9 @@
 
 ## 部署说明
 
-1. 创建 `data` 文件夹，参考 `data/config.yaml.example` 进行配置
-2. 参考 `docker-compose.yaml` 在 Docker 中启动
+1. 注册一个 [OAuth2 应用](https://github.com/settings/developers)，callback URL 填写 `[你的站点地址]/oauth2/callback`
+2. 创建 `data` 文件夹，参考 `data/config.yaml.example` 进行配置
+3. 参考 `docker-compose.yaml` 在 Docker 中启动
 
 ## 基本功能
 
