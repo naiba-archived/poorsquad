@@ -71,7 +71,7 @@ function deleteRequest(api) {
             confirmBtn.toggleClass('loading')
         }
     }).fail(err => {
-        lert('网络错误：' + err.responseText)
+        alert('网络错误：' + err.responseText)
     });
 }
 
@@ -112,7 +112,7 @@ function addCompany() {
 }
 
 function addRepository() {
-    showFormModal('.tiny.repository.modal', '#repositoryForm', '/api/repository');
+    showFormModal('.tiny.repository.add.modal', '#repositoryForm', '/api/repository');
 }
 
 function addEmployee(type, id) {
@@ -136,8 +136,45 @@ function removeTeam(id) {
     deleteRequest('/api/team/' + id)
 }
 
-function removeRepository(id) {
-    deleteRequest('/api/repository/' + id)
+function removeRepository(id, name) {
+    const modal = $('.repository.delete.modal')
+    const form = $('.repository.delete.modal form')
+    const btn = $('.repository.delete.modal .positive.button')
+    const nameEl = $('#deleteRepositoryForm input')
+    modal.children('.header').text("确认删除仓库「" + name + "」？")
+    if (btn.hasClass('loading')) {
+        return false
+    }
+    modal.modal({
+        closable: true,
+        onApprove: function () {
+            form.children('.message').remove()
+            if (nameEl.val() !== name) {
+                form.append(`<div class="ui negative message"><div class="header">操作失败</div><p>仓库名称不匹配</p></div>`)
+                return false
+            }
+            btn.toggleClass('loading')
+            $.ajax({
+                url: '/api/repository/' + id + '/' + name,
+                type: 'DELETE',
+            }).done(resp => {
+                if (resp.code == 200) {
+                    if (resp.message) {
+                        alert(resp.message)
+                    } else {
+                        alert('移除成功')
+                    }
+                    window.location.reload()
+                } else {
+                    alert('移除失败 ' + resp.code + '：' + resp.message)
+                    btn.toggleClass('loading')
+                }
+            }).fail(err => {
+                form.append(`<div class="ui negative message"><div class="header">网络错误</div><p>` + err.responseText + `</p></div>`)
+            });
+            return false
+        }
+    }).modal('show')
 }
 
 function removeEmployee(data) {

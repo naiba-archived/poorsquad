@@ -23,7 +23,7 @@ type RepositoryController struct {
 func ServeRepository(r gin.IRoutes) {
 	rc := RepositoryController{}
 	r.POST("/repository", rc.addOrEdit)
-	r.DELETE("/repository/:id", rc.delete)
+	r.DELETE("/repository/:id/:name", rc.delete)
 }
 
 type repositoryForm struct {
@@ -102,6 +102,13 @@ func (rc *RepositoryController) delete(c *gin.Context) {
 	err := dao.DB.First(&repo, "id = ?", c.Param("id")).Error
 
 	if err == nil {
+		if repo.Name != c.Param("name") {
+			c.JSON(http.StatusOK, model.Response{
+				Code:    http.StatusBadRequest,
+				Message: "仓库名称不匹配",
+			})
+			return
+		}
 		err = dao.DB.First(&account, "id = ?", repo.AccountID).Error
 	}
 

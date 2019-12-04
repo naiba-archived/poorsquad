@@ -1,0 +1,18 @@
+{{define "component/deleteRepository"}}
+<div class="ui tiny repository delete red modal transition hidden">
+    <div class="header">删除仓库</div>
+    <div class="content">
+        <form id="deleteRepositoryForm" class="ui form">
+            <div class="field error">
+                <label>再次输入仓库名确认</label>
+                <input type="text" placeholder="！！请慎重考虑！！">
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button">删除<i class="add icon"></i>
+        </button>
+    </div>
+</div>
+{{end}}
