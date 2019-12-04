@@ -1,17 +1,16 @@
 {{define "component/addRepository"}}
 <div class="ui tiny repository add modal transition hidden">
-    <div class="header">创建仓库</div>
+    <div class="header"></div>
     <div class="content">
         <form id="repositoryForm" class="ui form">
             <input type="hidden" name="id">
-            <input type="hidden" name="type">
             <div class="field">
                 <label>仓库名</label>
                 <input type="text" name="name" placeholder="awesome-project">
             </div>
             <div class="field">
                 <label>私有仓库</label>
-                <div class="ui selection dropdown">
+                <div class="ui selection private dropdown">
                     <input type="hidden" name="private">
                     <i class="dropdown icon"></i>
                     <div class="default text">请选择</div>
@@ -23,7 +22,7 @@
             </div>
             <div class="field">
                 <label>选择账号</label>
-                <div class="ui selection dropdown">
+                <div class="ui selection account dropdown">
                     <input type="hidden" name="account">
                     <i class="dropdown icon"></i>
                     <div class="default text">请选择</div>
@@ -38,8 +37,7 @@
     </div>
     <div class="actions">
         <div class="ui negative button">取消</div>
-        <button class="ui positive right labeled icon button">创建<i class="add icon"></i>
-        </button>
+        <button class="ui positive right labeled icon button"></button>
     </div>
 </div>
 {{end}}

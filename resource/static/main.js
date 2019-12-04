@@ -111,7 +111,20 @@ function addCompany() {
     showFormModal('.tiny.company.modal', '#companyForm', '/api/company');
 }
 
-function addRepository() {
+function addOrEditRepository(isEdit, repo) {
+    const modal = $('.tiny.repository.add.modal')
+    console.log(repo, $('#repositoryForm input[name=name]'))
+    modal.children('.header').text((isEdit ? '修改' : '创建') + '仓库')
+    modal.find('.positive.button').html((isEdit ? '修改' : '创建') + '<i class="add icon"></i>')
+    modal.find('input[name=id]').val(isEdit ? repo.ID : null)
+    modal.find('input[name=name]').val(isEdit ? repo.Name : null)
+    if (isEdit) {
+        modal.find('.private.dropdown').dropdown('set selected', repo.Private ? 'on' : 'off')
+        modal.find('.account.dropdown').dropdown('set selected', repo.AccountID)
+    } else {
+        modal.find('.private.dropdown').dropdown('restore defaults')
+        modal.find('.account.dropdown').dropdown('restore defaults')
+    }
     showFormModal('.tiny.repository.add.modal', '#repositoryForm', '/api/repository');
 }
 

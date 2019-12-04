@@ -187,7 +187,7 @@
                             <h2>仓库列表</h2>
                         </div>
                         <div class="right aligned column">
-                            <div class="ui vertical animated button" onclick="addRepository()">
+                            <div class="ui vertical animated button" onclick="addOrEditRepository()">
                                 <div class="hidden content">创建</div>
                                 <div class="visible content">
                                     <i class="add icon"></i>
@@ -233,7 +233,7 @@
                                 </td>
                                 <td>
                                     <div class="ui icon buttons">
-                                        <button class="ui mini button"><i class="icon sync"></i></button>
+                                        <button class="ui mini button" onclick="addOrEditRepository(true,{{$repo}})"><i class="icon edit"></i></button>
                                         <button class="red ui mini button"
                                             onclick="removeRepository({{$repo.ID}},{{$repo.Name}})"><i
                                                 class="icon delete"></i></button>
