@@ -121,7 +121,9 @@ function addOrEditRepository(isEdit, repo) {
     if (isEdit) {
         modal.find('.private.dropdown').dropdown('set selected', repo.Private ? 'on' : 'off')
         modal.find('.account.dropdown').dropdown('set selected', repo.AccountID)
+        modal.find('.account.dropdown').addClass('disabled')
     } else {
+        modal.find('.account.dropdown').removeClass('disabled')
         modal.find('.private.dropdown').dropdown('restore defaults')
         modal.find('.account.dropdown').dropdown('restore defaults')
     }

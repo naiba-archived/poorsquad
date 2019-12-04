@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,9 +28,10 @@ func ServeRepository(r gin.IRoutes) {
 }
 
 type repositoryForm struct {
-	Name    string `binding:"required"`
-	Account string `binding:"required"`
-	Private string `binding:"required"`
+	ID        uint64 `json:"id,omitempty"`
+	Name      string `binding:"required" json:"name,omitempty"`
+	AccountID uint64 `binding:"required" json:"account_id,omitempty"`
+	Private   string `binding:"required" json:"private,omitempty"`
 }
 
 func (rc *RepositoryController) addOrEdit(c *gin.Context) {
@@ -44,17 +46,18 @@ func (rc *RepositoryController) addOrEdit(c *gin.Context) {
 	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
 
 	// 验证管理权限
-	var account model.Account
-	if err := dao.DB.First(&account, "id = ?", rf.Account).Error; err != nil {
+	var distAccount model.Account
+	if err := dao.DB.First(&distAccount, "id = ?", rf.AccountID).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("请求受限：%s", err),
 		})
 		return
 	}
+
 	var comp model.Company
-	comp.ID = account.CompanyID
-	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err != nil {
+	comp.ID = distAccount.CompanyID
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPSuperManager); err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
@@ -62,14 +65,30 @@ func (rc *RepositoryController) addOrEdit(c *gin.Context) {
 		return
 	}
 
+	var err error
+	var repostory model.Repository
+	var repo GitHubAPI.Repository
+	if rf.ID != 0 {
+		if rf.AccountID != distAccount.ID {
+			err = errors.New("GitHub 尚未完善账户间转移 API")
+		}
+		if err == nil {
+			repostory.ID = rf.ID
+			err = dao.DB.First(&repostory).Error
+		}
+	}
 	// 添加仓库
 	ctx := context.Background()
-	client := github.NewAPIClient(ctx, account.Token)
-	var repo GitHubAPI.Repository
+	client := github.NewAPIClient(ctx, distAccount.Token)
 	repo.Name = &rf.Name
 	private := rf.Private == "on"
 	repo.Private = &private
-	resp, _, err := client.Repositories.Create(ctx, "", &repo)
+	var resp *GitHubAPI.Repository
+	if rf.ID != 0 {
+		resp, _, err = client.Repositories.Edit(ctx, distAccount.Login, repostory.Name, &repo)
+	} else {
+		resp, _, err = client.Repositories.Create(ctx, "", &repo)
+	}
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
@@ -78,7 +97,7 @@ func (rc *RepositoryController) addOrEdit(c *gin.Context) {
 		return
 	}
 	r := model.NewRepositoryFromGitHub(resp)
-	r.AccountID = account.ID
+	r.AccountID = distAccount.ID
 	r.SyncedAt = time.Now()
 	if err := dao.DB.Save(&r).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
@@ -87,6 +106,7 @@ func (rc *RepositoryController) addOrEdit(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, model.Response{
 		Code: http.StatusOK,
 	})
