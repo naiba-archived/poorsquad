@@ -1,5 +1,9 @@
 $('.ui.checkbox').checkbox();
 $('.ui.dropdown').dropdown();
+$('.ui.avatar.dropdown').dropdown({
+    action: 'nothing',
+    on: 'hover',
+});
 
 const confirmBtn = $('.mini.confirm.modal .positive.button')
 function showConfirm(title, content, callFn, extData) {
