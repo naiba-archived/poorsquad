@@ -128,7 +128,6 @@ func logout(c *gin.Context) {
 		})
 		return
 	}
-	u.Token = ""
 	u.TokenExpired = time.Now()
 	if err := dao.DB.Save(u).Error; err != nil {
 		c.JSON(http.StatusOK, model.Response{
