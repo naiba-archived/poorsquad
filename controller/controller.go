@@ -154,7 +154,7 @@ func authorize(opt authorizeOption) func(*gin.Context) {
 		}
 		if err == nil {
 			var u model.User
-			err = dao.DB.Where("token = ?", token).First(&u).Error
+			err = dao.DB.Where("token = ? AND token_expired > ?", token, time.Now()).First(&u).Error
 			if err == nil {
 				// 已登录且只能游客访问
 				if opt.Guest {
