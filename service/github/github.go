@@ -271,6 +271,7 @@ func RemoveRepositoryFromTeam(ctx context.Context, client *GitHubAPI.Client, acc
 	}
 	// 从仓库中移除用户
 	for i := 0; i < len(users); i++ {
+		users[i].FetchTeams(dao.DB)
 		if err := RemoveEmployeeFromRepository(ctx, client, account, repository, &users[i]); err != nil {
 			errors = append(errors, err)
 		}
@@ -395,7 +396,7 @@ func AddEmployeeToRepository(ctx context.Context, client *GitHubAPI.Client, acco
 
 // RemoveEmployeeFromRepository ..
 func RemoveEmployeeFromRepository(ctx context.Context, client *GitHubAPI.Client, account *model.Account, repository *model.Repository, user *model.User) error {
-	if ok, err := repository.IsIndividualCollaborator(dao.DB, user); err != nil || !ok {
+	if ok, err := repository.IsIndividualCollaborator(dao.DB, user.TeamsID); err != nil || !ok {
 		return fmt.Errorf("用户「%s」在其他小组中还具有访问权限", user.Login)
 	}
 	var ur model.UserRepository

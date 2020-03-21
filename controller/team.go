@@ -51,7 +51,7 @@ func (tc *TeamController) remove(c *gin.Context) {
 	ctx := context.Background()
 	// 挨个仓库清理雇员权限并删除团队绑定
 	for i := 0; i < len(team.Repositories); i++ {
-		team.Repositories[i].GetAccount(dao.DB)
+		team.Repositories[i].ReleatedAccount(dao.DB)
 		client := github.NewAPIClient(ctx, team.Repositories[i].Account.Token)
 		github.RemoveRepositoryFromTeam(ctx, client, &team.Repositories[i].Account, &team, &team.Repositories[i])
 		if err := dao.DB.Delete(&model.TeamRepository{

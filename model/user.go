@@ -60,3 +60,10 @@ func (u *User) FetchTeams(db *gorm.DB) {
 		u.TeamsID = append(u.TeamsID, uts[i].TeamID)
 	}
 }
+
+// InTeams ...
+func (u *User) InTeams(db *gorm.DB, teamIDs []uint64) (bool, error) {
+	var count int
+	err := db.Model(&UserTeam{}).Where("user_id = ? AND team_id IN (?)", u.ID, teamIDs).Count(&count).Error
+	return count > 0, err
+}

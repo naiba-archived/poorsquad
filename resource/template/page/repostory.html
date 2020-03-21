@@ -1,0 +1,73 @@
+{{define "page/repository"}}
+{{template "common/header" .}}
+{{template "common/menu" .}}
+<div class="nb-container">
+    <div class="ui container">
+        <div class="grid-list">
+            <div class="ui grid">
+                <div class="two columns row">
+                    <div class="column">
+                        <h2>Webhooks</h2>
+                    </div>
+                    <div class="right aligned column">
+                        <div class="ui vertical animated button" onclick="addOrEditRepository()">
+                            <div class="hidden content">创建</div>
+                            <div class="visible content">
+                                <i class="add icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <table class="ui very basic fixed celled table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>激活</th>
+                            <th>Events</th>
+                            <th>URL</th>
+                            <th>InsecureSSL</th>
+                            <th>创建时间</th>
+                            <th>最后触发</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $hook := .Hooks}}
+                        <tr>
+                            <td>
+                                {{$hook.ID}}
+                            </td>
+                            <td>
+                                {{$hook.Active}}
+                            </td>
+                            <td>
+                                {{$hook.Events}}
+                            </td>
+                            <td>
+                                {{index $hook.Config "url"}}
+                            </td>
+                            <td>
+                                {{index $hook.Config "insecure_ssl"}}
+                            </td>
+                            <td>
+                                {{$hook.CreatedAt}}
+                            </td>
+                            <td>
+                                {{$hook.UpdatedAt}}
+                            </td>
+                            <td>
+                                <div class="ui icon buttons">
+                                    <button class="ui mini button" onclick=""><i class="icon edit"></i></button>
+                                    <button class="red ui mini button" onclick=""><i class="icon delete"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "common/footer" .}}
+{{end}}

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -44,12 +45,48 @@ func (r *Repository) SAccountID() string {
 	return strconv.FormatUint(r.AccountID, 10)
 }
 
-type userIDres struct {
-	UserID uint64
+// IsOutsideCollaborator 是不是只在一个 Team 的开发者
+func (r *Repository) IsOutsideCollaborator(db *gorm.DB, userID uint64) (bool, error) {
+	if len(r.OutsideCollaborators) == 0 {
+		if err := r.RelatedOutsideCollaborators(db); err != nil {
+			return false, err
+		}
+	}
+	for i := 0; i < len(r.OutsideCollaborators); i++ {
+		if r.OutsideCollaborators[i].ID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// IsIndividualCollaborator 是不是只在一个 Team 的开发者
+func (r *Repository) IsIndividualCollaborator(db *gorm.DB, teamIDs []uint64) (bool, error) {
+	teams, err := r.GetTeams(db)
+	if err != nil {
+		return false, err
+	}
+	var count int
+	for i := 0; i < len(teams); i++ {
+		for j := 0; j < len(teamIDs); j++ {
+			if teams[i] == teamIDs[j] {
+				count++
+			}
+		}
+	}
+	return count < 2, nil
+}
+
+// ReleatedAccount ..
+func (r *Repository) ReleatedAccount(db *gorm.DB) error {
+	return db.Where("id = ?", r.AccountID).First(&r.Account).Error
 }
 
 // RelatedOutsideCollaborators ..
 func (r *Repository) RelatedOutsideCollaborators(db *gorm.DB) error {
+	type userIDres struct {
+		UserID uint64
+	}
 	var ids []userIDres
 	err := db.Raw(`SELECT user_repositories.user_id
 	FROM user_repositories
@@ -74,36 +111,13 @@ func (r *Repository) RelatedOutsideCollaborators(db *gorm.DB) error {
 	return nil
 }
 
-// IsOutsideCollaborator 是不是只在一个 Team 的开发者
-func (r *Repository) IsOutsideCollaborator(db *gorm.DB, userID uint64) (bool, error) {
-	if len(r.OutsideCollaborators) == 0 {
-		if err := r.RelatedOutsideCollaborators(db); err != nil {
-			return false, err
-		}
-	}
-	for i := 0; i < len(r.OutsideCollaborators); i++ {
-		if r.OutsideCollaborators[i].ID == userID {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-// IsIndividualCollaborator 是不是只在一个 Team 的开发者
-func (r *Repository) IsIndividualCollaborator(db *gorm.DB, user *User) (bool, error) {
-	teams, err := r.GetTeams(db)
-	if err != nil {
+// HasUser ..
+func (r *Repository) HasUser(db *gorm.DB, userID uint64) (bool, error) {
+	err := db.First(&UserRepository{}, "repository_id = ? AND user_id = ?", r.ID, userID).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return false, err
 	}
-	var count int
-	for i := 0; i < len(teams); i++ {
-		for j := 0; j < len(user.TeamsID); j++ {
-			if teams[i] == user.TeamsID[j] {
-				count++
-			}
-		}
-	}
-	return count < 2, nil
+	return err == nil, err
 }
 
 // GetTeams ..
@@ -118,9 +132,4 @@ func (r *Repository) GetTeams(db *gorm.DB) ([]uint64, error) {
 		teamIDs = append(teamIDs, teamRepositories[i].TeamID)
 	}
 	return teamIDs, nil
-}
-
-// GetAccount ..
-func (r *Repository) GetAccount(db *gorm.DB) {
-	db.Where("id = ?", r.AccountID).First(&r.Account)
 }

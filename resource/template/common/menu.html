@@ -5,6 +5,7 @@
             <img src="/static/logo.png">
         </div>
         <a class="item{{if eq .MatchedPath "/"}} active{{end}}" href="/">首页</a>
+        {{if eq .MatchedPath "/repository/:id"}}<a class="item" href="/company/{{.Company.ID}}">{{.Company.Brand}}</a>{{end}}
         <div class="right menu">
             <a class="item" href="https://github.com/naiba/poorsquad/issues" target="_blank">反馈</a>
             <div class="item">

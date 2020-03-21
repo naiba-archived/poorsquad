@@ -55,6 +55,7 @@ func RunWeb() {
 		}))
 		memberPage.GET("/", home)
 		memberPage.GET("/company/:id", company)
+		memberPage.GET("/repository/:id", repository)
 	}
 
 	api := r.Group("api")

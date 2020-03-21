@@ -1,14 +1,17 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/go-github/v28/github"
 
 	"github.com/naiba/poorsquad/model"
 	"github.com/naiba/poorsquad/service/dao"
+	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
 func login(c *gin.Context) {
@@ -108,6 +111,82 @@ func company(c *gin.Context) {
 		"Repositories": repos,
 		"Accounts":     accounts,
 		"CompanyID":    compID,
+	}))
+}
+
+func repository(c *gin.Context) {
+	repoID := c.Param("id")
+	var repo model.Repository
+	var comp model.Company
+	var err error
+	err = dao.DB.First(&repo, "id = ?", repoID).Error
+	if err == nil {
+		err = repo.ReleatedAccount(dao.DB)
+	}
+	if err == nil {
+		err = dao.DB.First(&comp, "id = ?", repo.Account.CompanyID).Error
+	}
+	if err != nil {
+		showErrorPage(c, errInfo{
+			Code:  http.StatusForbidden,
+			Title: "出现错误",
+			Msg:   fmt.Sprintf("数据库错误：%s", err),
+			Link:  "/",
+			Btn:   "返回首页",
+		}, true)
+		return
+	}
+
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var has bool
+	has, _ = repo.HasUser(dao.DB, u.ID)
+	if !has {
+		teams, err := repo.GetTeams(dao.DB)
+		if err == nil {
+			has, err = u.InTeams(dao.DB, teams)
+		}
+	}
+	if !has {
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	}
+	if err != nil {
+		showErrorPage(c, errInfo{
+			Code:  http.StatusForbidden,
+			Title: "出现错误",
+			Msg:   "无权访问此仓库",
+			Link:  "/",
+			Btn:   "返回首页",
+		}, true)
+		return
+	}
+
+	ctx := context.Background()
+	client := GitHubService.NewAPIClient(ctx, repo.Account.Token)
+
+	var allHooks []*github.Hook
+	nextPage := 1
+	for nextPage != 0 {
+		hooks, resp, err := client.Repositories.ListHooks(ctx, repo.Account.Login, repo.Name, &github.ListOptions{
+			Page: nextPage,
+		})
+		if err != nil {
+			showErrorPage(c, errInfo{
+				Code:  http.StatusForbidden,
+				Title: "出现错误",
+				Msg:   "GitHub API：" + err.Error(),
+				Link:  "/",
+				Btn:   "返回首页",
+			}, true)
+			return
+		}
+		nextPage = resp.NextPage
+		allHooks = append(allHooks, hooks...)
+	}
+
+	c.HTML(http.StatusOK, "page/repository", commonEnvironment(c, gin.H{
+		"Title":   repo.Name + "- 仓库",
+		"Hooks":   allHooks,
+		"Company": comp,
 	}))
 }
 

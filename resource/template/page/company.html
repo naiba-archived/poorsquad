@@ -233,7 +233,10 @@
                                 </td>
                                 <td>
                                     <div class="ui icon buttons">
-                                        <button class="ui mini button" onclick="addOrEditRepository(true,{{$repo}})"><i class="icon edit"></i></button>
+                                        <a class="primary ui mini button" href="/repository/{{$repo.ID}}"><i
+                                                class="icon cogs"></i></a>
+                                        <button class="ui mini button" onclick="addOrEditRepository(true,{{$repo}})"><i
+                                                class="icon edit"></i></button>
                                         <button class="red ui mini button"
                                             onclick="removeRepository({{$repo.ID}},{{$repo.Name}})"><i
                                                 class="icon delete"></i></button>

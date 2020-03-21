@@ -285,6 +285,7 @@ func (ec *EmployeeController) remove(c *gin.Context) {
 			})
 			return
 		}
+		user.FetchTeams(dao.DB)
 		ctx := context.Background()
 		client := github.NewAPIClient(ctx, account.Token)
 		if err := github.RemoveEmployeeFromRepository(ctx, client, &account, &repository, &user); err != nil {
