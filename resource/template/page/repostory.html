@@ -52,11 +52,17 @@
                             </td>
                             <td>
                                 <div class="ui icon buttons">
-                                    <button class="ui mini button" onclick=""><i class="icon tty"></i></button>
-                                    <button class="ui mini button" onclick=""><i class="icon redo"></i></button>
+                                    <button class="ui mini button"
+                                        onclick="showConfirm('确定发送一个测试请求？','',webhookAction,{action:'ping',rid:{{$.RepoID}},wid:{{$hook.ID}}})"><i
+                                            class="icon tty"></i></button>
+                                    <button class="ui mini button"
+                                        onclick="showConfirm('确定发送最后的 PUSH 事件？','',webhookAction,{action:'test',rid:{{$.RepoID}},wid:{{$hook.ID}}})"><i
+                                            class="icon redo"></i></button>
                                     <button class="ui mini button" onclick="addOrEditWebhook(true,{{$hook|json}})"><i
                                             class="icon edit"></i></button>
-                                    <button class="ui mini button" onclick=""><i class="icon delete"></i></button>
+                                    <button class="ui mini button"
+                                        onclick="showConfirm('确定删除 Webhook ？','',webhookAction,{action:'delete',rid:{{$.RepoID}},wid:{{$hook.ID}}})"><i
+                                            class="icon delete"></i></button>
                                 </div>
                             </td>
                         </tr>

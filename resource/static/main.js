@@ -79,6 +79,32 @@ function deleteRequest(api) {
     });
 }
 
+function webhookAction(data) {
+    const { action, rid, wid } = data
+    if (action == 'delete') {
+        deleteRequest('/api/repository/' + rid + '/webhook/' + wid)
+        return
+    }
+    $.ajax({
+        url: '/api/repository/' + rid + '/webhook/' + wid + '/' + action,
+        type: 'GET',
+    }).done(resp => {
+        if (resp.code == 200) {
+            if (resp.message) {
+                alert(resp.message)
+            } else {
+                alert('请求成功')
+            }
+            window.location.reload()
+        } else {
+            alert('请求失败 ' + resp.code + '：' + resp.message)
+            confirmBtn.toggleClass('loading')
+        }
+    }).fail(err => {
+        alert('网络错误：' + err.responseText)
+    });
+}
+
 function addTeam() {
     showFormModal('.tiny.team.modal', '#teamForm', '/api/team');
 }
@@ -174,6 +200,7 @@ function removeTeam(id) {
     deleteRequest('/api/team/' + id)
 }
 
+
 function removeRepository(id, name) {
     const modal = $('.repository.delete.modal')
     const form = $('.repository.delete.modal form')
@@ -193,7 +220,7 @@ function removeRepository(id, name) {
             }
             btn.toggleClass('loading')
             $.ajax({
-                url: '/api/repository/' + id + '/' + name,
+                url: '/api/repository/' + id + '/delete/' + name,
                 type: 'DELETE',
             }).done(resp => {
                 if (resp.code == 200) {

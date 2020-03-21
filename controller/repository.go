@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,8 +27,11 @@ type RepositoryController struct {
 func ServeRepository(r gin.IRoutes) {
 	rc := RepositoryController{}
 	r.POST("/repository", rc.addOrEdit)
-	r.DELETE("/repository/:id/:name", rc.delete)
 	r.POST("/webhook", rc.addOrEditWebhook)
+	r.DELETE("/repository/:rid/delete/:name", rc.delete)
+	r.DELETE("/repository/:rid/webhook/:wid", rc.deleteWebhook)
+	r.GET("/repository/:rid/webhook/:wid/ping", rc.pingWebhook)
+	r.GET("/repository/:rid/webhook/:wid/test", rc.testWebhook)
 }
 
 type repositoryForm struct {
@@ -122,7 +126,7 @@ func (rc *RepositoryController) delete(c *gin.Context) {
 	var repo model.Repository
 	var account model.Account
 	var comp model.Company
-	err := dao.DB.First(&repo, "id = ?", c.Param("id")).Error
+	err := dao.DB.First(&repo, "id = ?", c.Param("rid")).Error
 
 	if err == nil {
 		if repo.Name != c.Param("name") {
@@ -199,8 +203,6 @@ func (rc *RepositoryController) addOrEditWebhook(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("%+v", wf)
-
 	var repo model.Repository
 	var comp model.Company
 	err = dao.DB.First(&repo, "id = ?", wf.RepoID).Error
@@ -259,6 +261,191 @@ func (rc *RepositoryController) addOrEditWebhook(c *gin.Context) {
 		_, _, err = client.Repositories.CreateHook(ctx, repo.Account.Login, repo.Name, &hook)
 	}
 
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("出现错误：%s", err),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
+}
+
+func (rc *RepositoryController) deleteWebhook(c *gin.Context) {
+	rid, err := strconv.ParseInt(c.Param("rid"), 10, 64)
+	if rid < 1 {
+		err = errors.New("错误ID")
+	}
+	wid, _ := strconv.ParseInt(c.Param("wid"), 10, 64)
+	if wid < 1 {
+		err = errors.New("错误ID")
+	}
+	var repo model.Repository
+	var comp model.Company
+	if err == nil {
+		err = dao.DB.First(&repo, "id = ?", rid).Error
+	}
+	if err == nil {
+		err = repo.ReleatedAccount(dao.DB)
+	}
+	if err == nil {
+		err = dao.DB.First(&comp, "id = ?", repo.Account.CompanyID).Error
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var has bool
+	has, _ = repo.HasUser(dao.DB, u.ID)
+	if !has {
+		teams, err := repo.GetTeams(dao.DB)
+		if err == nil {
+			has, err = u.InTeams(dao.DB, teams, model.UTPManager)
+		}
+	}
+	if !has {
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusForbidden,
+			Message: "无权访问此仓库",
+		})
+		return
+	}
+
+	ctx := context.Background()
+	client := GitHubService.NewAPIClient(ctx, repo.Account.Token)
+	_, err = client.Repositories.DeleteHook(ctx, repo.Account.Login, repo.Name, wid)
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("出现错误：%s", err),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
+}
+
+func (rc *RepositoryController) pingWebhook(c *gin.Context) {
+	rid, err := strconv.ParseInt(c.Param("rid"), 10, 64)
+	if rid < 1 {
+		err = errors.New("错误ID")
+	}
+	wid, _ := strconv.ParseInt(c.Param("wid"), 10, 64)
+	if wid < 1 {
+		err = errors.New("错误ID")
+	}
+	var repo model.Repository
+	var comp model.Company
+	err = dao.DB.First(&repo, "id = ?", rid).Error
+	if err == nil {
+		err = repo.ReleatedAccount(dao.DB)
+	}
+	if err == nil {
+		err = dao.DB.First(&comp, "id = ?", repo.Account.CompanyID).Error
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var has bool
+	has, _ = repo.HasUser(dao.DB, u.ID)
+	if !has {
+		teams, err := repo.GetTeams(dao.DB)
+		if err == nil {
+			has, err = u.InTeams(dao.DB, teams, 0)
+		}
+	}
+	if !has {
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusForbidden,
+			Message: "无权访问此仓库",
+		})
+		return
+	}
+
+	ctx := context.Background()
+	client := GitHubService.NewAPIClient(ctx, repo.Account.Token)
+	_, err = client.Repositories.PingHook(ctx, repo.Account.Login, repo.Name, wid)
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("出现错误：%s", err),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
+}
+
+func (rc *RepositoryController) testWebhook(c *gin.Context) {
+	rid, err := strconv.ParseInt(c.Param("rid"), 10, 64)
+	if rid < 1 {
+		err = errors.New("错误ID")
+	}
+	wid, _ := strconv.ParseInt(c.Param("wid"), 10, 64)
+	if wid < 1 {
+		err = errors.New("错误ID")
+	}
+	var repo model.Repository
+	var comp model.Company
+	err = dao.DB.First(&repo, "id = ?", rid).Error
+	if err == nil {
+		err = repo.ReleatedAccount(dao.DB)
+	}
+	if err == nil {
+		err = dao.DB.First(&comp, "id = ?", repo.Account.CompanyID).Error
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var has bool
+	has, _ = repo.HasUser(dao.DB, u.ID)
+	if !has {
+		teams, err := repo.GetTeams(dao.DB)
+		if err == nil {
+			has, err = u.InTeams(dao.DB, teams, 0)
+		}
+	}
+	if !has {
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusForbidden,
+			Message: "无权访问此仓库",
+		})
+		return
+	}
+
+	ctx := context.Background()
+	client := GitHubService.NewAPIClient(ctx, repo.Account.Token)
+	_, err = client.Repositories.TestHook(ctx, repo.Account.Login, repo.Name, wid)
 	if err != nil {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,

@@ -29,17 +29,17 @@
     - 绑定的 GitHub 账号
     - 项目
       - 外部贡献者：单项目外部贡献者，只能阅读单项目内信息
-      - webhook：添加、修改、删除、触发 webhook ****todo***
+      - webhook：添加、修改、删除、触发 webhook
       - branch：添加、删除保护分支 ****todo***
     - 小组
       - 小组管理员：管理小组所属项目的
-        - Webhook ****todo***
+        - Webhook
         - Protect Branch ****todo***
         - Deploy Key ****todo***
         - 项目下成员
       - 小组成员
         - 读取项目的所有信息
-        - 触发 webhook ****todo***
+        - 触发 webhook
 
 ## 版权声明
 

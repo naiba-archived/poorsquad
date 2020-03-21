@@ -20,7 +20,7 @@ func RunWeb() {
 	r.Use(bindPath)
 	r.SetFuncMap(template.FuncMap{
 		"tf": func(t time.Time) string {
-			return t.Format("2006年1月2号")
+			return t.Format("2006年1月2号 15:04:05")
 		},
 		"json": func(data interface{}) string {
 			b, _ := json.Marshal(data)
