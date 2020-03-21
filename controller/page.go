@@ -143,7 +143,7 @@ func repository(c *gin.Context) {
 	if !has {
 		teams, err := repo.GetTeams(dao.DB)
 		if err == nil {
-			has, err = u.InTeams(dao.DB, teams)
+			has, err = u.InTeams(dao.DB, teams, 0)
 		}
 	}
 	if !has {
@@ -187,6 +187,7 @@ func repository(c *gin.Context) {
 		"Title":   repo.Name + "- 仓库",
 		"Hooks":   allHooks,
 		"Company": comp,
+		"RepoID":  repoID,
 	}))
 }
 

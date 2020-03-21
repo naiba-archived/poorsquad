@@ -62,8 +62,8 @@ func (u *User) FetchTeams(db *gorm.DB) {
 }
 
 // InTeams ...
-func (u *User) InTeams(db *gorm.DB, teamIDs []uint64) (bool, error) {
+func (u *User) InTeams(db *gorm.DB, teamIDs []uint64, perm uint64) (bool, error) {
 	var count int
-	err := db.Model(&UserTeam{}).Where("user_id = ? AND team_id IN (?)", u.ID, teamIDs).Count(&count).Error
+	err := db.Model(&UserTeam{}).Where("user_id = ? AND team_id IN (?) and permission >= ?", u.ID, teamIDs, perm).Count(&count).Error
 	return count > 0, err
 }

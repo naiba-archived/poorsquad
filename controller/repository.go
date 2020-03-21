@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/naiba/poorsquad/model"
 	"github.com/naiba/poorsquad/service/dao"
 	"github.com/naiba/poorsquad/service/github"
+	GitHubService "github.com/naiba/poorsquad/service/github"
 )
 
 // RepositoryController ..
@@ -25,6 +27,7 @@ func ServeRepository(r gin.IRoutes) {
 	rc := RepositoryController{}
 	r.POST("/repository", rc.addOrEdit)
 	r.DELETE("/repository/:id/:name", rc.delete)
+	r.POST("/webhook", rc.addOrEditWebhook)
 }
 
 type repositoryForm struct {
@@ -162,6 +165,107 @@ func (rc *RepositoryController) delete(c *gin.Context) {
 	}
 	tx.Commit()
 
+	c.JSON(http.StatusOK, model.Response{
+		Code: http.StatusOK,
+	})
+}
+
+type webhookForm struct {
+	ID          int64  `json:"id"`
+	RepoID      uint64 `json:"repo_id"`
+	URL         string
+	Events      string
+	Secret      string
+	ContentType string `json:"content_type"`
+	Active      string
+	InsecureSSL string `json:"insecure_ssl"`
+}
+
+func (rc *RepositoryController) addOrEditWebhook(c *gin.Context) {
+	var err error
+	var wf webhookForm
+	var events []string
+	if err := c.ShouldBindJSON(&wf); err != nil {
+
+	}
+	if err == nil {
+		err = json.Unmarshal([]byte(wf.Events), &events)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("数据格式不对：%s", err),
+		})
+		return
+	}
+
+	fmt.Printf("%+v", wf)
+
+	var repo model.Repository
+	var comp model.Company
+	err = dao.DB.First(&repo, "id = ?", wf.RepoID).Error
+	if err == nil {
+		err = repo.ReleatedAccount(dao.DB)
+	}
+	if err == nil {
+		err = dao.DB.First(&comp, "id = ?", repo.Account.CompanyID).Error
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("数据库错误：%s", err),
+		})
+		return
+	}
+
+	u := c.MustGet(model.CtxKeyAuthorizedUser).(*model.User)
+	var has bool
+	has, _ = repo.HasUser(dao.DB, u.ID)
+	if !has {
+		teams, err := repo.GetTeams(dao.DB)
+		if err == nil {
+			has, err = u.InTeams(dao.DB, teams, model.UTPManager)
+		}
+	}
+	if !has {
+		_, err = comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager)
+	}
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusForbidden,
+			Message: "无权访问此仓库",
+		})
+		return
+	}
+
+	var hook GitHubAPI.Hook
+	hook.Events = events
+	var active = wf.Active == "on"
+	hook.Active = &active
+	hook.Config = make(map[string]interface{})
+	hook.Config["url"] = wf.URL
+	hook.Config["content_type"] = wf.ContentType
+	hook.Config["secret"] = wf.Secret
+	hook.Config["insecure_ssl"] = 0
+	if wf.InsecureSSL == "on" {
+		hook.Config["insecure_ssl"] = 1
+	}
+
+	ctx := context.Background()
+	client := GitHubService.NewAPIClient(ctx, repo.Account.Token)
+	if wf.ID > 0 {
+		_, _, err = client.Repositories.EditHook(ctx, repo.Account.Login, repo.Name, wf.ID, &hook)
+	} else {
+		_, _, err = client.Repositories.CreateHook(ctx, repo.Account.Login, repo.Name, &hook)
+	}
+
+	if err != nil {
+		c.JSON(http.StatusOK, model.Response{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("出现错误：%s", err),
+		})
+		return
+	}
 	c.JSON(http.StatusOK, model.Response{
 		Code: http.StatusOK,
 	})

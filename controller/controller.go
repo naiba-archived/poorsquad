@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -20,6 +21,10 @@ func RunWeb() {
 	r.SetFuncMap(template.FuncMap{
 		"tf": func(t time.Time) string {
 			return t.Format("2006年1月2号")
+		},
+		"json": func(data interface{}) string {
+			b, _ := json.Marshal(data)
+			return string(b)
 		},
 		"fs": func() string {
 			if !dao.Conf.Debug {

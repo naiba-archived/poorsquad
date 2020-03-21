@@ -117,7 +117,6 @@ function addCompany() {
 
 function addOrEditRepository(isEdit, repo) {
     const modal = $('.tiny.repository.add.modal')
-    console.log(repo, $('#repositoryForm input[name=name]'))
     modal.children('.header').text((isEdit ? '修改' : '创建') + '仓库')
     modal.find('.positive.button').html((isEdit ? '修改' : '创建') + '<i class="add icon"></i>')
     modal.find('input[name=id]').val(isEdit ? repo.ID : null)
@@ -132,6 +131,26 @@ function addOrEditRepository(isEdit, repo) {
         modal.find('.account.dropdown').dropdown('restore defaults')
     }
     showFormModal('.tiny.repository.add.modal', '#repositoryForm', '/api/repository');
+}
+
+function addOrEditWebhook(isEdit, webhook) {
+    if (isEdit) {
+        webhook = JSON.parse(webhook)
+    }
+    const modal = $('.tiny.webhook.add.modal')
+    modal.children('.header').text((isEdit ? '修改' : '创建') + 'Webhook')
+    modal.find('.positive.button').html((isEdit ? '修改' : '创建') + '<i class="add icon"></i>')
+    modal.find('input[name=id]').val(isEdit ? webhook.id : null)
+    modal.find('input[name=events]').val(isEdit ? JSON.stringify(webhook.events) : null)
+    modal.find('input[name=url]').val(isEdit ? webhook.config.url : null)
+    if (isEdit) {
+        modal.find('.content-type.dropdown').dropdown('set selected', webhook.config.content_type ? webhook.config.content_type : 'form')
+    } else {
+        modal.find('.content-type.dropdown').dropdown('set selected', 'form')
+    }
+    modal.find('.active.checkbox').checkbox(webhook && webhook.active ? 'check' : 'uncheck')
+    modal.find('.ssl.checkbox').checkbox(webhook && webhook.config && webhook.config.insecure_ssl == '1' ? 'check' : 'uncheck')
+    showFormModal('.tiny.webhook.add.modal', '#webhookForm', '/api/webhook');
 }
 
 function addEmployee(type, id) {

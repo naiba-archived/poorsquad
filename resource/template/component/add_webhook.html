@@ -1,0 +1,51 @@
+{{define "component/addWebhook"}}
+<div class="ui tiny webhook add modal transition hidden">
+    <div class="header"></div>
+    <div class="content">
+        <form id="webhookForm" class="ui form">
+            <input type="hidden" name="id">
+            <input type="hidden" name="repo_id" value="{{.RepoID}}">
+            <div class="field">
+                <label>回调地址</label>
+                <input type="text" name="url" placeholder="https://example.com/hook">
+            </div>
+            <div class="field">
+                <label>Events</label>
+                <input type="text" name="events" placeholder="[push,pull_request]">
+            </div>
+            <div class="field">
+                <label>Secret</label>
+                <input type="text" name="secret">
+            </div>
+            <div class="field">
+                <label>回调格式</label>
+                <div class="ui selection content-type dropdown">
+                    <input type="hidden" name="content_type">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">请选择</div>
+                    <div class="menu">
+                        <div class="item" data-value="form">form</div>
+                        <div class="item" data-value="json">json</div>
+                    </div>
+                </div>
+            </div>
+            <div class="inline field">
+                <div class="ui ssl checkbox">
+                    <input type="checkbox" name="insecure_ssl" tabindex="0" class="hidden">
+                    <label>验证SSL证书</label>
+                </div>
+            </div>
+            <div class="inline field">
+                <div class="ui active checkbox">
+                    <input type="checkbox" name="active" tabindex="0" class="hidden">
+                    <label>激活</label>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="actions">
+        <div class="ui negative button">取消</div>
+        <button class="ui positive right labeled icon button"></button>
+    </div>
+</div>
+{{end}}
