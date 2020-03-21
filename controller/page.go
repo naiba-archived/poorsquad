@@ -55,9 +55,16 @@ func company(c *gin.Context) {
 		accountID = append(accountID, accounts[i].ID)
 	}
 
+	// 管理员列表
+	dao.FetchCompanyManagers(&comp)
+
 	// 仓库列表
 	var repos []model.Repository
-	dao.DB.Where("account_id IN (?) ", accountID).Find(&repos)
+	if _, err := comp.CheckUserPermission(dao.DB, u.ID, model.UCPManager); err == nil {
+		dao.DB.Where("account_id IN (?) ", accountID).Find(&repos)
+	} else {
+		dao.DB.Raw(`SELECT  repositories.* FROM repositories INNER JOIN accounts,user_repositories WHERE repositories.id = user_repositories.repository_id  AND repositories.account_id = accounts.id AND accounts.company_id = ? AND user_repositories.user_id = ?`, comp.ID, u.ID).Scan(&repos)
+	}
 	// 外部雇员
 	for i := 0; i < len(repos); i++ {
 		repos[i].RelatedOutsideCollaborators(dao.DB)
@@ -93,9 +100,6 @@ func company(c *gin.Context) {
 			teams[i].Employees[j] = user
 		}
 	}
-
-	// 管理员列表
-	dao.FetchCompanyManagers(&comp)
 
 	c.HTML(http.StatusOK, "page/company", commonEnvironment(c, gin.H{
 		"Title":        comp.Brand + "- 企业",
