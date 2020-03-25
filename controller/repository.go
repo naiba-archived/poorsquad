@@ -177,10 +177,10 @@ func (rc *RepositoryController) delete(c *gin.Context) {
 type webhookForm struct {
 	ID          int64  `json:"id"`
 	RepoID      uint64 `json:"repo_id"`
-	URL         string
-	Events      string
-	Secret      string
-	ContentType string `json:"content_type"`
+	URL         string `binding:"required"`
+	Events      string `binding:"required"`
+	Secret      string `binding:"required"`
+	ContentType string `binding:"required" json:"content_type"`
 	Active      string
 	InsecureSSL string `json:"insecure_ssl"`
 }
