@@ -1,3 +1,5 @@
+># GitHub 全面免费了，直接使用 GitHub Team Free 就可以了
+
 # PoorSquad ![构建状态](https://github.com/naiba/poorsquad/workflows/Build%20Docker%20Image/badge.svg)
 
 :call_me_hand: 穷逼小分队，GitHub 账号管理面板。专为中小型团队、工作室在 GitHub 愉快协作管理雇员使用。
